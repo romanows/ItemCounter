@@ -1,18 +1,21 @@
 Please see the LICENSE.txt file for licensing information.
 
-ItemCounter and ItemDoubleAccumulator are Java objects that are handy
-for accumulating counts of sets of items, in memory.  They have
-some basic summary statistics, serialization, and pretty-
-printing capabilities.
+ItemCounter is a Java class that stores a count for each appearance
+of an item.  ItemDoubleAccumulator stores the accumulated value
+associated with each appearance of an item.  They both supply basic 
+summary statistics, serialization, and pretty-printing capabilities. 
 
-The motivation for using these classes instead of Bag data structures 
-available in the Apache Commons collections library and Google Guava 
-library is to have a single-purpose counting API with no dependencies
-and that makes use of generics.  I expect most users will copy the 
-classes into their projects and add domain-specific functions as 
-needed.
+An example use of ItemCounter is to count the number of times 
+different words appear in a set of documents.  One could then output
+all words used, sorted by their frequency of occurrence.
 
-Enjoy!
+Similar functionality is available in the Bag data structures in  
+the Apache Commons collections library and Google Guava library.
+ItemCounter classes are designed with a single-purpose API, no 
+external dependencies, and sane default behavior.  They also take 
+advantage of Java generics.
+
+Feedback and bugfixes are welcomed.  Enjoy!
 
 Brian Romanowski
 romanows@gmail.com
