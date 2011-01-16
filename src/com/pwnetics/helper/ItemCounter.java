@@ -41,7 +41,7 @@ import java.util.TreeMap;
 
 /**
  * Bag data type that maintains counts on each item and item totals.
- * 
+ *
  * @author romanows
  *
  * @param <K> the type of object being counted
@@ -52,12 +52,12 @@ public class ItemCounter<K extends Object> {
 	 * Unfortunately, that library doesn't make use of Java generics at this time, so I'm disinclined to use it.
 	 * Also, we can subclass this easily and have classes that provide more complicated statistics over the contents.
 	 */
-	
-	
+
+
 	/** (item, count) */
 	protected Map<K, Integer> count;
-	
-	
+
+
 	/**
 	 * Use with a map to compare by value instead of by key.
 	 * @author romanows
@@ -68,8 +68,8 @@ public class ItemCounter<K extends Object> {
 			return a.getValue().compareTo(b.getValue());
 		}
 	}
-	
-	
+
+
 	/**
 	 * Use with a map to compare by value instead of by key.
 	 * @author romanows
@@ -80,8 +80,8 @@ public class ItemCounter<K extends Object> {
 			return b.getValue().compareTo(a.getValue());
 		}
 	}
-	
-	
+
+
 	/**
 	 * Use with a map to compare first by value and second by key.
 	 * Note that keys must implement the Comparable interface.
@@ -94,6 +94,7 @@ public class ItemCounter<K extends Object> {
 			this.base = base;
 		}
 
+		@Override
 		@SuppressWarnings("unchecked")
 		public int compare(K a, K b) {
 			int c = base.get(a).compareTo(base.get(b));
@@ -103,8 +104,8 @@ public class ItemCounter<K extends Object> {
 			return c;
 		}
 	}
-	
-	
+
+
 	/**
 	 * Use with a map to compare first by value and second by key.
 	 * Note that keys must implement the Comparable interface.
@@ -117,6 +118,7 @@ public class ItemCounter<K extends Object> {
 			this.base = base;
 		}
 
+		@Override
 		@SuppressWarnings("unchecked")
 		public int compare(K a, K b) {
 			int c = base.get(b).compareTo(base.get(a));
@@ -126,8 +128,8 @@ public class ItemCounter<K extends Object> {
 			return c;
 		}
 	}
-	
-	
+
+
 	/**
 	 * Constructor.
 	 */
@@ -135,11 +137,11 @@ public class ItemCounter<K extends Object> {
 		count = new HashMap<K, Integer>();
 	}
 
-	
+
 	/**
 	 * Get the count of an item
 	 * @param item the item whose count will be returned
-	 * @return the item's count 
+	 * @return the item's count
 	 */
 	public Integer get(K item) {
 		Integer c = count.get(item);
@@ -149,12 +151,12 @@ public class ItemCounter<K extends Object> {
 			return c;
 		}
 	}
-	
-	
+
+
 	/**
 	 * Set the count value for a given item.
 	 * @param item an item
-	 * @param count 
+	 * @param count
 	 */
 	public void set(K item, int count) {
 		if(count < 0) {
@@ -171,8 +173,8 @@ public class ItemCounter<K extends Object> {
 			this.count.put(item,count);
 		}
 	}
-	
-	
+
+
 	/**
 	 * Increment the count on an item.
 	 * @param item the item whose count to increment
@@ -188,8 +190,8 @@ public class ItemCounter<K extends Object> {
 		count.put(item, c);
 		return c;
 	}
-	
-	
+
+
 	/**
 	 * Get the total sum of all item counts in this collection.
 	 * @return the total sum of all item counts, or zero if empty.
@@ -198,7 +200,7 @@ public class ItemCounter<K extends Object> {
 		return CollectionMath.sumInt(count.values());
 	}
 
-	
+
 	/**
 	 * Get the mean of all item counts in this collection.
 	 * @return the mean of all item counts, or zero if empty.
@@ -206,8 +208,8 @@ public class ItemCounter<K extends Object> {
 	public double mean() {
 		return CollectionMath.meanInt(count.values());
 	}
-	
-	
+
+
 	/**
 	 * Get the variance of all item counts in this collection.
 	 * @return the varniance of all item counts, or zero if empty.
@@ -215,11 +217,11 @@ public class ItemCounter<K extends Object> {
 	public double variance() {
 		return CollectionMath.varianceInt(count.values());
 	}
-	
-	
+
+
 	/**
 	 * Returns a representation of the count map with the keys sorted by their value.
-	 * This is particularly useful when the key does not implement the Comparable interface. 
+	 * This is particularly useful when the key does not implement the Comparable interface.
 	 * @see #sortByKeyValue(boolean)
 	 * @param isAscending if true, will sort keys in ascending value; if false, will sort keys in descending value
 	 * @return an unmodifiable List of (Key, Count) entries, sorted by the Count only.
@@ -236,12 +238,12 @@ public class ItemCounter<K extends Object> {
 		Collections.sort(sortedList, vc);
 		return Collections.unmodifiableList(sortedList);
 	}
-	
-	
+
+
 	/**
 	 * Returns a representation of the count map with the keys sorted by their value.
 	 * Keys <b>must</b> implement the Comparable interface.
-	 * @see #sortByValue(boolean) 
+	 * @see #sortByValue(boolean)
 	 * @param isAscending if true, will sort keys in ascending value; if false, will sort keys in descending value
 	 * @return an unmodifiable sorted TreeMap
 	 */
@@ -256,8 +258,8 @@ public class ItemCounter<K extends Object> {
 		sortedMap.putAll(count);
 		return Collections.unmodifiableMap(sortedMap);
 	}
-	
-	
+
+
 	/**
 	 * Get the count of the different counts in this item counter.
 	 * @return the count of counts in this item counter
@@ -269,17 +271,17 @@ public class ItemCounter<K extends Object> {
 		}
 		return countOfCounts;
 	}
-	
-	
+
+
 	/**
-	 * Get the number of distinct items with non-zero count. 
+	 * Get the number of distinct items with non-zero count.
 	 * @return the number of distinct items
 	 */
 	public int size() {
 		return count.size();
 	}
-	
-	
+
+
 	/**
 	 * Get all item keys in this counter.
 	 * @return all item keys in an unmodifiable set
@@ -288,7 +290,7 @@ public class ItemCounter<K extends Object> {
 		return Collections.unmodifiableSet(count.keySet());
 	}
 
-	
+
 	/**
 	 * Get a map of the items to their counts.
 	 * @return an unmodifiable item to count map
@@ -297,19 +299,19 @@ public class ItemCounter<K extends Object> {
 		return Collections.unmodifiableMap(count);
 	}
 
-	
+
 	/**
-	 * Get the contents of this item counter in a CSV (tab-separated) format. 
+	 * Get the contents of this item counter in a CSV (tab-separated) format.
 	 * Constructed as "key.toString()\tcount\n"
 	 * @return the contents of this item counter
 	 */
 	public String toCSV() {
 		return toCSV("\t","\n");
 	}
-	
-	
+
+
 	/**
-	 * Get the contents of this item counter in a CSV-like format. 
+	 * Get the contents of this item counter in a CSV-like format.
 	 * Constructed as key.toString() + columnDelimiter + count + rowDelimiter
 	 * @return the contents of this item counter
 	 */
@@ -322,5 +324,62 @@ public class ItemCounter<K extends Object> {
 			sb.append(rowDelimiter);
 		}
 		return sb.toString();
+	}
+
+
+	/**
+	 * Get a view of this item counter as an unmodifiable object.
+	 * Methods {@link #increment(Object)} and {@link #set(Object, int)} will throw {@link UnsupportedOperationException} if called.
+	 * @return this object wrapped in an unmodifiable object
+	 */
+	public ItemCounter<K> asUnmodifiable() {
+		return new ItemCounter<K>() {
+
+			@Override
+			public int increment(K item) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public void set(K item, int count) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public Integer get(K item) {return super.get(item);}
+
+			@Override
+			public int sum() {return super.sum();}
+
+			@Override
+			public double mean() {return super.mean();}
+
+			@Override
+			public double variance() {return super.variance();}
+
+			@Override
+			public List<Map.Entry<K, Integer>> sortByValue(boolean isAscending) {return super.sortByValue(isAscending);}
+
+			@Override
+			public Map<K, Integer> sortByKeyValue(boolean isAscending) {return super.sortByKeyValue(isAscending);}
+
+			@Override
+			public ItemCounter<Integer> countOfCounts() {return super.countOfCounts();}
+
+			@Override
+			public int size() {return super.size();}
+
+			@Override
+			public Set<K> getItems() {return super.getItems();}
+
+			@Override
+			public Map<K, Integer> getMap() {return super.getMap();}
+
+			@Override
+			public String toCSV() {return super.toCSV();}
+
+			@Override
+			public String toCSV(String columnDelimiter, String rowDelimiter) {return super.toCSV(columnDelimiter, rowDelimiter);}
+		};
 	}
 }
