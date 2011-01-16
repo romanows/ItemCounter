@@ -309,9 +309,9 @@ public class ItemDoubleAccumulator<K extends Object> {
 
 
 	/**
-	 * Get a view of this item counter as an unmodifiable object.
+	 * Get a view of this as an unmodifiable object.
 	 * Methods {@link #add(ItemDoubleAccumulator)}, {@link #add(Object, double)}, and {@link #set(Object, double)} will throw {@link UnsupportedOperationException} if called.
-	 * @return this object wrapped in an unmodifiable object
+	 * @return an unmodifiable version of this object
 	 */
 	public ItemDoubleAccumulator<K> asUnmodifiable() {
 		return new ItemDoubleAccumulator<K>() {

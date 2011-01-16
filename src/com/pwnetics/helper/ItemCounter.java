@@ -328,9 +328,9 @@ public class ItemCounter<K extends Object> {
 
 
 	/**
-	 * Get a view of this item counter as an unmodifiable object.
+	 * Get a view of this as an unmodifiable object.
 	 * Methods {@link #increment(Object)} and {@link #set(Object, int)} will throw {@link UnsupportedOperationException} if called.
-	 * @return this object wrapped in an unmodifiable object
+	 * @return an unmodifiable version of this object
 	 */
 	public ItemCounter<K> asUnmodifiable() {
 		return new ItemCounter<K>() {
