@@ -28,6 +28,8 @@ authors.
 
 package com.pwnetics.helper;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -324,6 +326,33 @@ public class ItemCounter<K extends Object> {
 			sb.append(rowDelimiter);
 		}
 		return sb.toString();
+	}
+
+
+	/**
+	 * Write the contents of this item counter in a CSV (tab-separated) format.
+	 * Constructed as "key.toString()\tcount\n".
+	 * Does not close the writer.
+	 * @throws IOException
+	 */
+	public void writeCSV(Writer writer) throws IOException {
+		writeCSV(writer,"\t","\n");
+	}
+
+
+	/**
+	 * Write the contents of this item counter in a CSV-like format.
+	 * Constructed as key.toString() + columnDelimiter + count + rowDelimiter.
+	 * Does not close the writer.
+	 * @throws IOException
+	 */
+	public void writeCSV(Writer writer, String columnDelimiter, String rowDelimiter) throws IOException {
+		for(K k : getItems()) {
+			writer.write(k.toString());
+			writer.write(columnDelimiter);
+			writer.write(count.get(k));
+			writer.write(rowDelimiter);
+		}
 	}
 
 

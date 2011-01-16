@@ -28,6 +28,8 @@ authors.
 
 package com.pwnetics.helper;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -282,9 +284,9 @@ public class ItemDoubleAccumulator<K extends Object> {
 
 
 	/**
-	 * Get the contents of this item counter in a CSV (tab-separated) format.
+	 * Get contents in a CSV (tab-separated) format.
 	 * Constructed as "key.toString()\tvalue\n"
-	 * @return the contents of this item counter
+	 * @return the contents of this item accumulator
 	 */
 	public String toCSV() {
 		return toCSV("\t","\n");
@@ -292,8 +294,8 @@ public class ItemDoubleAccumulator<K extends Object> {
 
 
 	/**
-	 * Get the contents of this item counter in a CSV-like format.
-	 * Constructed as key.toString() + columnDelimiter + count + rowDelimiter
+	 * Get contents in a CSV-like format.
+	 * Constructed as key.toString() + columnDelimiter + value + rowDelimiter
 	 * @return the contents of this item accumulator
 	 */
 	public String toCSV(String columnDelimiter, String rowDelimiter) {
@@ -305,6 +307,33 @@ public class ItemDoubleAccumulator<K extends Object> {
 			sb.append(rowDelimiter);
 		}
 		return sb.toString();
+	}
+
+
+	/**
+	 * Write contents in a CSV (tab-separated) format.
+	 * Constructed as "key.toString()\tvalue\n".
+	 * Does not close the writer.
+	 * @throws IOException
+	 */
+	public void writeCSV(Writer writer) throws IOException {
+		writeCSV(writer,"\t","\n");
+	}
+
+
+	/**
+	 * Write contents in a CSV-like format.
+	 * Constructed as key.toString() + columnDelimiter + value + rowDelimiter
+	 * Does not close the writer.
+	 * @throws IOException
+	 */
+	public void writeCSV(Writer writer, String columnDelimiter, String rowDelimiter) throws IOException {
+		for(K k : getItems()) {
+			writer.write(k.toString());
+			writer.write(columnDelimiter);
+			writer.write(acc.get(k).toString());
+			writer.write(rowDelimiter);
+		}
 	}
 
 
