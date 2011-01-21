@@ -47,10 +47,10 @@ public class CollectionMath {
 		for(Integer n : c) {
 			sum += n;
 		}
-		return sum;		
+		return sum;
 	}
-	
-	
+
+
 	/**
 	 * Sum all elements of the given collection.
 	 * @param c some collection
@@ -62,10 +62,37 @@ public class CollectionMath {
 		for(Double n : c) {
 			sum += n;
 		}
-		return sum;		
+		return sum;
 	}
-	
-	
+
+
+	/**
+	 * Sum all elements of the given collection with the Kahan summation algorithm.
+	 * The Kahan algorithm reduces sum errors caused by adding floating point numbers that vary significantly in magnitude.
+	 * See http://en.wikipedia.org/w/index.php?title=Kahan_summation_algorithm&oldid=407779143
+	 *
+	 * This should be slightly slower than {@link #sum(Collection)}.
+	 * For most sums, use of double prevents many round-off errors, and this method is not needed.
+	 * Also, there are more accurate algorithms than this one (see discussion on Wikipedia).
+	 * This would likely be more useful when summing collections of lower-precision floats.
+	 *
+	 * @param c some collection
+	 * @return the sum of the collection or zero if the collection is empty
+	 * @throws NullPointerException if an element is null
+	 */
+	public static double sumKahan(Collection<Double> c) {
+		Double sum = 0.0;
+		double compensate = 0.0;
+		for(Double n : c) {
+			double y = n - compensate; // Next number to add, with correction
+			double t = sum + y; // Running sum, which may lose the lower bits introduced by a small y.
+			compensate = (t - sum) - y; // Recover what was added from y, then subtract to leave what _wasn't_ added to y (this will be negative, which is why we subtract the compensation value, above).
+			sum = t;
+		}
+		return sum;
+	}
+
+
 	/**
 	 * Average elements in a collection.
 	 * @param c some collection
@@ -74,18 +101,18 @@ public class CollectionMath {
 	public static double meanInt(Collection<Integer> c) {
 		return sumInt(c)/(double)c.size();
 	}
-	
-	
+
+
 	/**
 	 * Average elements in a collection.
 	 * @param c some collection
 	 * @return the average of the elements
 	 */
 	public static double mean(Collection<Double> c) {
-		return sum(c)/(double)c.size();
+		return sum(c)/c.size();
 	}
-	
-	
+
+
 	/**
 	 * Compute the variance over elements in a collection.
 	 * @param c some collection
@@ -95,14 +122,14 @@ public class CollectionMath {
 		double mean = meanInt(c);
 		double var = 0.0;
 		for(Integer n : c) {
-			double foo = mean - n; 
-			var += (foo * foo);
+			double foo = mean - n;
+			var += foo * foo;
 		}
-		
-		return var / (double)c.size();
+
+		return var / c.size();
 	}
 
-	
+
 	/**
 	 * Compute the variance over elements in a collection.
 	 * @param c some collection
@@ -112,14 +139,14 @@ public class CollectionMath {
 		double mean = mean(c);
 		double var = 0.0;
 		for(Double n : c) {
-			double foo = mean - n; 
-			var += (foo * foo);
+			double foo = mean - n;
+			var += foo * foo;
 		}
-		
-		return var / (double)c.size();
+
+		return var / c.size();
 	}
-	
-	
+
+
 	/**
 	 * Find the minimum value in a collection.
 	 * @param c some collection
@@ -138,7 +165,7 @@ public class CollectionMath {
 		return min;
 	}
 
-	
+
 	/**
 	 * Find the minimum value in a collection.
 	 * @param c some collection
@@ -173,10 +200,10 @@ public class CollectionMath {
 				max = n;
 			}
 		}
-		return max;		
+		return max;
 	}
 
-	
+
 	/**
 	 * Find the maximum value in a collection.
 	 * @param c some collection
@@ -192,6 +219,6 @@ public class CollectionMath {
 				max = n;
 			}
 		}
-		return max;				
+		return max;
 	}
 }
