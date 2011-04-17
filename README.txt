@@ -1,4 +1,4 @@
-Please see the LICENSE.txt file for licensing information.
+This code is licensed under one of the BSD variants, please see LICENSE.txt for full details.
 
 ItemCounter is a Java class that stores a count for each appearance
 of an item.  ItemDoubleAccumulator stores the accumulated value
