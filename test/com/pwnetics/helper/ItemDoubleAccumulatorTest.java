@@ -31,8 +31,10 @@ package com.pwnetics.helper;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Map.Entry;
 
 import org.junit.Test;
@@ -130,5 +132,26 @@ public class ItemDoubleAccumulatorTest {
 		assertTrue(ascending.get(2).getKey().equals("a"));
 		assertTrue(ascending.get(1).getKey().equals("c"));
 		assertTrue(ascending.get(0).getKey().equals("b"));
+	}
+	
+	@Test
+	public void testSumSafer() {
+		Random valRnd = new Random(42);
+		Random shuffleRnd = new Random(42);
+		List<Double> c = new ArrayList<Double>();
+
+		for(int i=0; i<100000; i++) {
+			c.add(valRnd.nextDouble());
+		}
+
+		List<Double> normalSum = new ArrayList<Double>();
+		List<Double> saferSum = new ArrayList<Double>();
+		for(int j=0; j<10; j++) {
+			normalSum.add(ItemDoubleAccumulator.sum(c));
+			saferSum.add(ItemDoubleAccumulator.sumKahan(c));
+			Collections.shuffle(c,shuffleRnd);
+		}
+//		System.out.println((CollectionMath.variance(normalSum) - 7e-20) + "\t" + CollectionMath.variance(saferSum));
+		assertTrue(ItemDoubleAccumulator.variance(normalSum) - 7e-20 > ItemDoubleAccumulator.variance(saferSum));
 	}
 }

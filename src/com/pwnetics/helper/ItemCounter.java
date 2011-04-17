@@ -31,6 +31,7 @@ package com.pwnetics.helper;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -205,7 +206,22 @@ public class ItemCounter<K extends Object> {
 	 * @return the total sum of all item counts, or zero if empty.
 	 */
 	public int sum() {
-		return CollectionMath.sumInt(count.values());
+		return sumInt(count.values());
+	}
+
+	
+	/**
+	 * Sum all elements of the given collection.
+	 * @param c some collection
+	 * @return the sum of the collection or zero if the collection is empty
+	 * @throws NullPointerException if an element is null
+	 */
+	protected static int sumInt(Collection<Integer> c) {
+		Integer sum = 0;
+		for(Integer n : c) {
+			sum += n;
+		}
+		return sum;
 	}
 
 
@@ -214,16 +230,43 @@ public class ItemCounter<K extends Object> {
 	 * @return the mean of all item counts, or zero if empty.
 	 */
 	public double mean() {
-		return CollectionMath.meanInt(count.values());
+		return meanInt(count.values());
+	}
+
+
+	/**
+	 * Average elements in a collection.
+	 * @param c some collection
+	 * @return the average of elements
+	 */
+	protected static double meanInt(Collection<Integer> c) {
+		return sumInt(c)/(double)c.size();
 	}
 
 
 	/**
 	 * Get the variance of all item counts in this collection.
-	 * @return the varniance of all item counts, or zero if empty.
+	 * @return the variance of all item counts, or zero if empty.
 	 */
 	public double variance() {
-		return CollectionMath.varianceInt(count.values());
+		return varianceInt(count.values());
+	}
+
+
+	/**
+	 * Compute the variance over elements in a collection.
+	 * @param c some collection
+	 * @return the variance over elements
+	 */
+	protected static double varianceInt(Collection<Integer> c) {
+		double mean = meanInt(c);
+		double var = 0.0;
+		for(Integer n : c) {
+			double foo = mean - n;
+			var += foo * foo;
+		}
+
+		return var / c.size();
 	}
 
 

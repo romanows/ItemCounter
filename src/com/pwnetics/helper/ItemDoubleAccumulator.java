@@ -31,6 +31,7 @@ package com.pwnetics.helper;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -201,7 +202,49 @@ public class ItemDoubleAccumulator<K extends Object> {
 		if(acc.isEmpty()) {
 			return null;
 		}
-		return CollectionMath.sum(acc.values());
+		return sum(acc.values());
+	}
+
+
+	/**
+	 * Sum all elements of the given collection.
+	 * @param c some collection
+	 * @return the sum of the collection or zero if the collection is empty
+	 * @throws NullPointerException if an element is null
+	 */
+	protected static double sum(Collection<Double> c) {
+		Double sum = 0.0;
+		for(Double n : c) {
+			sum += n;
+		}
+		return sum;
+	}
+
+
+	/**
+	 * Sum all elements of the given collection with the Kahan summation algorithm.
+	 * The Kahan algorithm reduces sum errors caused by adding floating point numbers that vary significantly in magnitude.
+	 * See http://en.wikipedia.org/w/index.php?title=Kahan_summation_algorithm&oldid=407779143
+	 *
+	 * This should be slightly slower than {@link #sum(Collection)}.
+	 * For most sums, use of double prevents many round-off errors, and this method is not needed.
+	 * Also, there are more accurate algorithms than this one (see discussion on Wikipedia).
+	 * This would likely be more useful when summing collections of lower-precision floats.
+	 *
+	 * @param c some collection
+	 * @return the sum of the collection or zero if the collection is empty
+	 * @throws NullPointerException if an element is null
+	 */
+	protected static double sumKahan(Collection<Double> c) {
+		Double sum = 0.0;
+		double compensate = 0.0;
+		for(Double n : c) {
+			double y = n - compensate; // Next number to add, with correction
+			double t = sum + y; // Running sum, which may lose the lower bits introduced by a small y.
+			compensate = (t - sum) - y; // Recover what was added from y, then subtract to leave what _wasn't_ added to y (this will be negative, which is why we subtract the compensation value, above).
+			sum = t;
+		}
+		return sum;
 	}
 
 
@@ -210,7 +253,17 @@ public class ItemDoubleAccumulator<K extends Object> {
 	 * @return the mean of all item counts, or zero if empty.
 	 */
 	public double mean() {
-		return CollectionMath.mean(acc.values());
+		return mean(acc.values());
+	}
+
+
+	/**
+	 * Average elements in a collection.
+	 * @param c some collection
+	 * @return the average of the elements
+	 */
+	protected static double mean(Collection<Double> c) {
+		return sum(c)/c.size();
 	}
 
 
@@ -219,7 +272,24 @@ public class ItemDoubleAccumulator<K extends Object> {
 	 * @return the varniance of all item counts, or zero if empty.
 	 */
 	public double variance() {
-		return CollectionMath.variance(acc.values());
+		return variance(acc.values());
+	}
+
+
+	/**
+	 * Compute the variance over elements in a collection.
+	 * @param c some collection
+	 * @return the variance over elements
+	 */
+	protected static double variance(Collection<Double> c) {
+		double mean = mean(c);
+		double var = 0.0;
+		for(Double n : c) {
+			double foo = mean - n;
+			var += foo * foo;
+		}
+
+		return var / c.size();
 	}
 
 
