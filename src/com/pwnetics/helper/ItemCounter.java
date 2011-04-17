@@ -42,7 +42,14 @@ import java.util.TreeMap;
 
 
 /**
- * Bag data type that maintains counts on each item and item totals.
+ * Collection of items and their positive counts.
+ * 
+ * <p>Queries about objects that have not been added will return a count of zero, 
+ * indicating they are not contained in this object.</p>
+ * 
+ * <p>An object's count will change when the object's count is {@link #set(Object, int)},
+ * or when an object is passed to the {@link #increment(Object)} method such that the 
+ * new object is equals() to the object already contained in the ItemCounter.</p>   
  *
  * @author romanows
  *
@@ -50,9 +57,8 @@ import java.util.TreeMap;
  */
 public class ItemCounter<K extends Object> {
 	/*
-	 * Note that the Apache Collections library has a Bag type that may have much of the same functionality.
-	 * Unfortunately, that library doesn't make use of Java generics at this time, so I'm disinclined to use it.
-	 * Also, we can subclass this easily and have classes that provide more complicated statistics over the contents.
+	 * The Apache Collections library has a Bag type that may have much of the same functionality.
+	 * Google Guava also has some nice bag and collections types.
 	 */
 
 

@@ -42,6 +42,15 @@ import java.util.TreeMap;
 
 /**
  * Accumulates values associated with items.
+ * 
+ * <p>The behavior of this class differs conceptually from {@link ItemCounter}.
+ * In {@link ItemCounter}, any object that is not contained in the {@link ItemCounter} 
+ * would be reported to have a count of zero.
+ * In the {@link ItemDoubleAccumulator}, an object that has never been added to the 
+ * accumulator will cause {@link #get(Object)} to return a null.
+ * An object that has been added with a value of zero 
+ * will cause {@link #get(Object)} to return zero.</p>
+ * 
  * @author romanows
  *
  * @param <K> the type of object being used as the item
