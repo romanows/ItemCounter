@@ -14,7 +14,7 @@ ItemCounter classes are designed with a single-purpose API, no
 external dependencies, and sane default behavior.  They also take   
 advantage of Java generics.  
 
-Feedback and bugfixes are welcomed.  Enjoy!  
+[Javadoc](http://romanows.github.com/ItemCounter/doc/index.html) is available online.  Feedback and bugfixes are welcomed.  
 
 Brian Romanowski  
 romanows@gmail.com  
