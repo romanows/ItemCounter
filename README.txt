@@ -1,5 +1,4 @@
-This code is licensed under one of the BSD variants, please see LICENSE.txt for full details.
-
+# OVERVIEW 
 ItemCounter is a Java class that stores a count for each appearance
 of an item.  ItemDoubleAccumulator stores the accumulated value
 associated with each appearance of an item.  They both support basic 
@@ -21,7 +20,12 @@ Brian Romanowski
 romanows@gmail.com
 
 
-== Example ==
+# DETAILS 
+This code is licensed under one of the BSD variants, please see 
+LICENSE.txt for full details.
+
+
+# EXAMPLE
 
 // Count and print the lower-case version of whitespace-separated tokens.
 
