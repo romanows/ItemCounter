@@ -27,9 +27,11 @@ LICENSE.txt for full details.
 
 # Example
     // Print the number of lower-case tokens observed in a string.
-
+		
+    String words = "foo bar bat baz foo foo baz";
     ItemCounter<String> wordCount = new ItemCounter<String>();
     for(String word : words.split("\\s+")) {
        wordCount.increment(word.toLowerCase());
     }
     System.out.println(wordCount.toCSV());
+
