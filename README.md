@@ -26,7 +26,7 @@ LICENSE.txt for full details.
 
 
 # Example
-    // Count and print the lower-case version of whitespace-separated tokens.
+    // Print the number of lower-case tokens observed in a string.
 
     ItemCounter<String> wordCount = new ItemCounter<String>();
     for(String word : words.split("\\s+")) {
