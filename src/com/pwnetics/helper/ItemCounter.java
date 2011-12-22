@@ -211,7 +211,7 @@ public class ItemCounter<K extends Object> {
 	 * Returns the key/value pair with the lowest value (and secondarily with the "lowest" key).
 	 * Not stable; if there are multiple "different" items that compare as equal (for example, if the keys don't implement {@link Comparable}),
 	 * then it is possible for multiple calls to this method to return multiple answers.
-	 * @return key/value pair with the lowest value 
+	 * @return key/value pair with the lowest value, or <null,0> if the counter is empty 
 	 */
 	public KeyValuePair min() {
 		if(count.isEmpty()) {
@@ -237,7 +237,7 @@ public class ItemCounter<K extends Object> {
 	 * Returns the key/value pair with the largest value (and secondarily with the "largest" key).
 	 * Not stable; if there are multiple "different" items that compare as equal (for example, if the keys don't implement {@link Comparable}),
 	 * then it is possible for multiple calls to this method to return multiple answers.
-	 * @return key/value pair with the lowest value 
+	 * @return key/value pair with the lowest value, or <null,0> if the counter is empty 
 	 */
 	public KeyValuePair max() {
 		if(count.isEmpty()) {
@@ -346,7 +346,7 @@ public class ItemCounter<K extends Object> {
 	 * <p>This sort is not stable; if there are multiple "different" items that compare as equal (for example, if the keys don't implement {@link Comparable}),
 	 * then it is possible for multiple calls to this method to return various orderings.
 	 * </p>
-
+	 *
 	 * @param isAscending if true, will sort keys in ascending value; if false, will sort keys in descending value
 	 * @return an unmodifiable sorted list
 	 */
