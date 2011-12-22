@@ -205,6 +205,58 @@ public class ItemCounter<K extends Object> {
 		}
 		return sum;
 	}
+	
+	
+	/**
+	 * Returns the key/value pair with the lowest value (and secondarily with the "lowest" key).
+	 * Not stable; if there are multiple "different" items that compare as equal (for example, if the keys don't implement {@link Comparable}),
+	 * then it is possible for multiple calls to this method to return multiple answers.
+	 * @return key/value pair with the lowest value 
+	 */
+	public KeyValuePair min() {
+		if(count.isEmpty()) {
+			return new KeyValuePair(null,0);
+		}
+		KeyValuePair pair = null;
+		ValueKeyAscendingComparator vc = new ValueKeyAscendingComparator();
+		for(Entry<K, Integer> entry : count.entrySet()) {
+			KeyValuePair entryPair = new KeyValuePair(entry); 
+			if(pair == null) {
+				pair = entryPair;
+			} else {
+				if(vc.compare(pair, entryPair) > 0) {
+					pair = entryPair;
+				}
+			}
+		}
+		return pair;
+	}
+	
+	
+	/**
+	 * Returns the key/value pair with the largest value (and secondarily with the "largest" key).
+	 * Not stable; if there are multiple "different" items that compare as equal (for example, if the keys don't implement {@link Comparable}),
+	 * then it is possible for multiple calls to this method to return multiple answers.
+	 * @return key/value pair with the lowest value 
+	 */
+	public KeyValuePair max() {
+		if(count.isEmpty()) {
+			return new KeyValuePair(null,0);
+		}
+		KeyValuePair pair = null;
+		ValueKeyDescendingComparator vc = new ValueKeyDescendingComparator();
+		for(Entry<K, Integer> entry : count.entrySet()) {
+			KeyValuePair entryPair = new KeyValuePair(entry); 
+			if(pair == null) {
+				pair = entryPair;
+			} else {
+				if(vc.compare(pair, entryPair) > 0) {
+					pair = entryPair;
+				}
+			}
+		}
+		return pair;
+	}
 
 	
 	/**
@@ -290,6 +342,11 @@ public class ItemCounter<K extends Object> {
 	/**
 	 * Returns a list of key-value pairs that is sorted first by item counts, then by item comparisons if those objects implement {@link Comparable}.
 	 * The returned list is not backed by the item counter, so consider it a snapshot of the item counts.
+	 * 
+	 * <p>This sort is not stable; if there are multiple "different" items that compare as equal (for example, if the keys don't implement {@link Comparable}),
+	 * then it is possible for multiple calls to this method to return various orderings.
+	 * </p>
+
 	 * @param isAscending if true, will sort keys in ascending value; if false, will sort keys in descending value
 	 * @return an unmodifiable sorted list
 	 */

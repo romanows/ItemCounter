@@ -36,6 +36,8 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.pwnetics.helper.ItemCounter.KeyValuePair;
+
 public class ItemCounterTest {
 
 	@Test
@@ -92,6 +94,62 @@ public class ItemCounterTest {
 		assertTrue(ic.sum() == (long)Integer.MAX_VALUE * 2L);
 	}
 
+	@Test
+	public void testMinMax() {
+		ItemCounter<String> ic = new ItemCounter<String>();
+		ItemCounter<String>.KeyValuePair mn = ic.min();
+		ItemCounter<String>.KeyValuePair mx = ic.max();
+		
+		assertTrue(mn.getKey() == null);
+		assertTrue(mn.getValue() == 0);
+		assertTrue(mx.getKey() == null);
+		assertTrue(mx.getValue() == 0);
+		
+		ic.increment("a");		
+		mn = ic.min();
+		mx = ic.max();
+		
+		assertTrue(mn.getKey() == "a");
+		assertTrue(mn.getValue() == 1);
+		assertTrue(mx.getKey() == "a");
+		assertTrue(mx.getValue() == 1);
+		
+		ic.increment("b");
+		mn = ic.min();
+		mx = ic.max();
+
+		assertTrue(mn.getKey() == "a");
+		assertTrue(mn.getValue() == 1);
+		assertTrue(mx.getKey() == "b");
+		assertTrue(mx.getValue() == 1);
+		
+		ic.increment("c");
+		mn = ic.min();
+		mx = ic.max();
+
+		assertTrue(mn.getKey() == "a");
+		assertTrue(mn.getValue() == 1);
+		assertTrue(mx.getKey() == "c");
+		assertTrue(mx.getValue() == 1);
+		
+		ic.set("b",3);
+		mn = ic.min();
+		mx = ic.max();
+
+		assertTrue(mn.getKey() == "a");
+		assertTrue(mn.getValue() == 1);
+		assertTrue(mx.getKey() == "b");
+		assertTrue(mx.getValue() == 3);
+		
+		ic.set("a",2);
+		mn = ic.min();
+		mx = ic.max();
+
+		assertTrue(mn.getKey() == "c");
+		assertTrue(mn.getValue() == 1);
+		assertTrue(mx.getKey() == "b");
+		assertTrue(mx.getValue() == 3);
+	}
 
 	@Test
 	public void testMean() {
