@@ -28,12 +28,11 @@ authors.
 */
 
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import org.junit.Test;
 
@@ -82,7 +81,83 @@ public class ItemCounterTest {
 		ic.set("a", 0);
 		assertTrue(ic.sum() == 11);
 	}
+	
+	@Test
+	public void testLargeSum() {
+		ItemCounter<String> ic = new ItemCounter<String>();
+		assertTrue(ic.sum() == 0);
+		ic.set("a", Integer.MAX_VALUE);
+		assertTrue(ic.sum() == Integer.MAX_VALUE);
+		ic.set("b", Integer.MAX_VALUE);
+		assertTrue(ic.sum() == (long)Integer.MAX_VALUE * 2L);
+	}
 
+
+	@Test
+	public void testMean() {
+		ItemCounter<String> ic = new ItemCounter<String>();
+		assertTrue(ic.mean() == 0.0);
+		ic.increment("a");
+		assertTrue(ic.mean() == 1.0);
+		ic.increment("b");
+		assertTrue(ic.mean() == 1.0);
+		ic.increment("c");
+		assertTrue(ic.mean() == 1.0);
+		ic.increment("a");
+		assertTrue(ic.mean() == (2+1+1)/3.0);
+		ic.increment("b");
+		assertTrue(ic.mean() == (2+2+1)/3.0);
+		ic.increment("c");
+		assertTrue(ic.mean() == 2.0);
+		
+		ic.set("a", Integer.MAX_VALUE);
+		assertTrue(ic.mean() == 2147483651.0/3.0);
+	}	
+	
+	@Test
+	public void testVariancePopulation() {
+		ItemCounter<String> ic = new ItemCounter<String>();
+		assertTrue(ic.variancePopulation() == 0);
+		ic.increment("a");
+		assertTrue(ic.variancePopulation() == 0);
+		ic.increment("b");
+		assertTrue(ic.variancePopulation() == 0);
+		ic.increment("c");
+		assertTrue(ic.variancePopulation() == 0);
+		ic.increment("a");
+		assertTrue(ic.variancePopulation() == 2.0 / 9.0);
+		ic.increment("b");
+		assertTrue(ic.variancePopulation() == 2.0 / 9.0);
+		ic.increment("c");
+		assertTrue(ic.variancePopulation() == 0.0);
+		
+		ic.set("a", Integer.MAX_VALUE);
+		double expected = 9223372011084972050.0/9.0; 
+		assertEquals(expected, ic.variancePopulation(), expected * 1e-9);  // epsilon is relative to magnitude of expected value; arbitrarily chosen amount
+	}
+	
+	@Test
+	public void testVariance() {
+		ItemCounter<String> ic = new ItemCounter<String>();
+		assertTrue(ic.variance() == 0);
+		ic.increment("a");
+		assertTrue(ic.variance() == 0);
+		ic.increment("b");
+		assertTrue(ic.variance() == 0);
+		ic.increment("c");
+		assertTrue(ic.variance() == 0);
+		ic.increment("a");
+		assertTrue(ic.variance() == 1.0 / 3.0);
+		ic.increment("b");
+		assertTrue(ic.variance() == 1.0 / 3.0);
+		ic.increment("c");
+		assertTrue(ic.variance() == 0.0);
+		
+		ic.set("a", Integer.MAX_VALUE);
+		double expected = 4611686005542486025.0/3.0; 
+		assertEquals(expected, ic.variance(), expected * 1e-9);  // epsilon is relative to magnitude of expected value; arbitrarily chosen amount
+	}
+	
 	@Test
 	public void testSize() {
 		ItemCounter<String> ic = new ItemCounter<String>();
@@ -100,36 +175,45 @@ public class ItemCounterTest {
 	}
 
 	@Test
-	public void testSortByValue() {
+	public void testSortByValueKey() {
 		ItemCounter<String> ic = new ItemCounter<String>();
 		ic.increment("a");
 		ic.increment("b");
 		ic.increment("a");
 		ic.increment("c");
-		List<Entry<String, Integer>> descending = ic.sortByValue(false);
-		assertTrue(descending.get(0).getKey().equals("a"));
+		List<ItemCounter<String>.KeyValuePair> descendingList = ic.sortByValueKey(false); 
+		assertTrue(descendingList.get(0).getKey().equals("a"));
+		assertTrue(descendingList.get(1).getKey().equals("c"));
+		assertTrue(descendingList.get(2).getKey().equals("b"));
 		
-		List<Entry<String, Integer>> ascending = ic.sortByValue(true);
-		assertTrue(ascending.get(2).getKey().equals("a"));
+		List<ItemCounter<String>.KeyValuePair> ascendingList = ic.sortByValueKey(true);
+		assertTrue(ascendingList.get(2).getKey().equals("a"));
+		assertTrue(ascendingList.get(1).getKey().equals("c"));
+		assertTrue(ascendingList.get(0).getKey().equals("b"));
 	}
-
+	
 	@Test
-	public void testSortByKeyValue() {
+	public void testAsUnmodifiable() {
 		ItemCounter<String> ic = new ItemCounter<String>();
 		ic.increment("a");
 		ic.increment("b");
 		ic.increment("a");
 		ic.increment("c");
-		Map<String, Integer> descendingMap = ic.sortByKeyValue(false);
-		List<Entry<String, Integer>> descending = new ArrayList<Entry<String, Integer>>(descendingMap.entrySet()); 
-		assertTrue(descending.get(0).getKey().equals("a"));
-		assertTrue(descending.get(1).getKey().equals("c"));
-		assertTrue(descending.get(2).getKey().equals("b"));
 		
-		Map<String, Integer> ascendingMap = ic.sortByKeyValue(true);
-		List<Entry<String, Integer>> ascending = new ArrayList<Entry<String, Integer>>(ascendingMap.entrySet());
-		assertTrue(ascending.get(2).getKey().equals("a"));
-		assertTrue(ascending.get(1).getKey().equals("c"));
-		assertTrue(ascending.get(0).getKey().equals("b"));
+		ItemCounter<String> uc = ic.asUnmodifiable();
+		assertTrue(uc.get("a") == 2);
+		assertTrue(uc.get("b") == 1);
+		try {
+			uc.increment("a");
+			fail("unmodifiable ItemCounter should throw an exception");
+		} catch(UnsupportedOperationException e) {
+			// pass
+		}
+		try {
+			uc.set("a",5);
+			fail("unmodifiable ItemCounter should throw an exception");
+		} catch(UnsupportedOperationException e) {
+			// pass
+		}
 	}
 }

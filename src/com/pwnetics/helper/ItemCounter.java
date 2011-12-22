@@ -31,7 +31,6 @@ package com.pwnetics.helper;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -39,18 +38,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeMap;
 
 
 /**
- * Collection of items and their positive counts.
+ * Use this to count objects and calculate simple statistics.
  * 
- * <p>Queries about objects that have not been added will return a count of zero, 
- * indicating they are not contained in this object.</p>
+ * <p>To count objects, consider using {@link ItemCounter#increment(Object)}; this will automatically increment the count associated with the given object.
+ * To query the count for an object, consider using {@link ItemCounter#get(Object)}; this will return the count associated with the given object.
+ * For objects that have not been added to an ItemCounter, the reported count is always zero.
+ * </p>
  * 
  * <p>An object's count will change when the object's count is {@link #set(Object, int)},
  * or when an object is passed to the {@link #increment(Object)} method such that the 
- * new object is equals() to the object already contained in the ItemCounter.</p>   
+ * new object is equals() to the object already contained in the ItemCounter.
+ * Counts are always non-negative.</p>   
  *
  * @author romanows
  *
@@ -64,51 +65,47 @@ public class ItemCounter<K extends Object> {
 
 
 	/** (item, count) */
-	protected Map<K, Integer> count;
+	protected final Map<K, Integer> count;
 
 
-	/**
-	 * Use with a map to compare by value instead of by key.
-	 * @author romanows
-	 */
-	protected class ValueAscendingComparator implements Comparator<Map.Entry<K, Integer>> {
-		@Override
-		public int compare(Entry<K, Integer> a, Entry<K, Integer> b) {
-			return a.getValue().compareTo(b.getValue());
+	/**  Holds key-value pairs for {@link ItemCounter#sortByValue(boolean)}. */
+	public class KeyValuePair {
+		K key;
+		Integer value;
+
+		public KeyValuePair(Entry<K, Integer> entry) {
+			this(entry.getKey(), entry.getValue());
+		}
+
+		public KeyValuePair(K key, Integer value) {
+			this.key = key;
+			this.value = value;
+		}
+		
+		public K getKey() {
+			return key;
+		}
+		
+		public Integer getValue() {
+			return value;
 		}
 	}
 
-
+	
 	/**
-	 * Use with a map to compare by value instead of by key.
+	 * Use with a map to compare first by value and second by key, if keys implement {@link Comparable}.
 	 * @author romanows
 	 */
-	protected class ValueDescendingComparator implements Comparator<Map.Entry<K, Integer>> {
+	protected class KeyValueAscendingComparator implements Comparator<KeyValuePair> {
 		@Override
-		public int compare(Entry<K, Integer> a, Entry<K, Integer> b) {
-			return b.getValue().compareTo(a.getValue());
-		}
-	}
-
-
-	/**
-	 * Use with a map to compare first by value and second by key.
-	 * Note that keys must implement the Comparable interface.
-	 * @author romanows
-	 */
-	protected class KeyValueAscendingComparator implements Comparator<K> {
-		protected Map<K, Integer> base;
-
-		public KeyValueAscendingComparator(Map<K, Integer> base) {
-			this.base = base;
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public int compare(K a, K b) {
-			int c = base.get(a).compareTo(base.get(b));
+		public int compare(KeyValuePair a, KeyValuePair b) {
+			int c = a.getValue().compareTo(b.getValue());
 			if(c == 0) {
-				return ((Comparable<K>)a).compareTo(b);
+				if(a.getKey() instanceof Comparable<?>) {
+					@SuppressWarnings("unchecked")
+					Comparable<K> x = (Comparable<K>)a.getKey(); 
+					return x.compareTo(b.getKey());	
+				}
 			}
 			return c;
 		}
@@ -116,23 +113,19 @@ public class ItemCounter<K extends Object> {
 
 
 	/**
-	 * Use with a map to compare first by value and second by key.
-	 * Note that keys must implement the Comparable interface.
+	 * Use with a map to compare first by value and second by key, if keys implement {@link Comparable}.
 	 * @author romanows
 	 */
-	protected class KeyValueDescendingComparator implements Comparator<K> {
-		protected Map<K, Integer> base;
-
-		public KeyValueDescendingComparator(Map<K, Integer> base) {
-			this.base = base;
-		}
-
+	protected class KeyValueDescendingComparator implements Comparator<KeyValuePair> {
 		@Override
-		@SuppressWarnings("unchecked")
-		public int compare(K a, K b) {
-			int c = base.get(b).compareTo(base.get(a));
+		public int compare(KeyValuePair a, KeyValuePair b) {
+			int c = b.getValue().compareTo(a.getValue());
 			if(c == 0) {
-				return ((Comparable<K>)b).compareTo(a);
+				if(a.getKey() instanceof Comparable<?>) {
+					@SuppressWarnings("unchecked")
+					Comparable<K> x = (Comparable<K>)b.getKey(); 
+					return x.compareTo(a.getKey());	
+				}
 			}
 			return c;
 		}
@@ -186,7 +179,7 @@ public class ItemCounter<K extends Object> {
 
 	/**
 	 * Increment the count on an item.
-	 * @param item the item whose count to increment
+	 * @param item item whose count to increment
 	 * @return the new count of the given item
 	 */
 	public int increment(K item) {
@@ -202,112 +195,117 @@ public class ItemCounter<K extends Object> {
 
 
 	/**
-	 * Get the total sum of all item counts in this collection.
-	 * @return the total sum of all item counts, or zero if empty.
+	 * Get the sum of all item counts in this collection.
+	 * @return the total sum of all item counts, zero if empty.
 	 */
-	public int sum() {
-		return sumInt(count.values());
-	}
-
-	
-	/**
-	 * Sum all elements of the given collection.
-	 * @param c some collection
-	 * @return the sum of the collection or zero if the collection is empty
-	 * @throws NullPointerException if an element is null
-	 */
-	protected static int sumInt(Collection<Integer> c) {
-		Integer sum = 0;
-		for(Integer n : c) {
+	public long sum() {
+		long sum = 0L;
+		for(Integer n : count.values()) {
 			sum += n;
 		}
 		return sum;
 	}
 
-
+	
 	/**
 	 * Get the mean of all item counts in this collection.
 	 * @return the mean of all item counts, or zero if empty.
 	 */
 	public double mean() {
-		return meanInt(count.values());
+		if(count.size() == 0) {
+			return 0;
+		}
+		return sum()/(double)count.size();
+
+		/*
+		 * The code below calculates an incremental average, which can prevent overflow in the accumulating variable. 
+		 * 
+		 * In LaTeX:
+		 * A_{i+1} = A_i + \frac{ x_{i+1} - A_i }{ i+1 }
+		 */
+		
+//		double mean = 0;
+//		int i = 1;
+//		
+//		for(Integer c : count.values()) {
+//			mean += (c - mean)/i++;
+//		}
+//		
+//		return mean;
 	}
 
 
 	/**
-	 * Average elements in a collection.
-	 * @param c some collection
-	 * @return the average of elements
-	 */
-	protected static double meanInt(Collection<Integer> c) {
-		return sumInt(c)/(double)c.size();
-	}
-
-
-	/**
-	 * Get the variance of all item counts in this collection.
-	 * @return the variance of all item counts, or zero if empty.
+	 * Get the sample variance of all item counts in this collection.
+	 * Use this variance if you desire an estimate of the variance of some population of items, of which the current ItemCounter contains only an incomplete sample.
+	 * Otherwise, see {@link #variancePopulation()}.
+	 * 
+	 * @return the sample variance of all item counts, or zero if empty.
 	 */
 	public double variance() {
-		return varianceInt(count.values());
+		if(count.size() < 2) {
+			return 0;
+		}
+		
+		double mean = mean();
+		double var = 0.0;
+		
+		for(Integer n : count.values()) {
+			double foo = mean - n;
+			var += foo * foo;
+		}
+	
+		return var / (count.size() - 1);
 	}
 
 
 	/**
-	 * Compute the variance over elements in a collection.
-	 * @param c some collection
-	 * @return the variance over elements
+	 * Get the population variance of all item counts in this collection.
+	 * Use this variance if you desire to know only the variance of the items in this ItemCounter, otherwise see {@link #variance()}.
+	 * 
+	 * <p>There is little difference between the sample and population variance when there are many distinct items.
+	 * When there are few items, the difference is pronounced.
+	 * In general, it is probably better to use the sample variance {@link #variance()}.
+	 * </p>
+	 *  
+	 * @return the population variance of all item counts, or zero if empty.
 	 */
-	protected static double varianceInt(Collection<Integer> c) {
-		double mean = meanInt(c);
+	public double variancePopulation() {
+		if(count.size() < 2) {
+			return 0;
+		}
+
+		double mean = mean();
 		double var = 0.0;
-		for(Integer n : c) {
+		
+		for(Integer n : count.values()) {
 			double foo = mean - n;
 			var += foo * foo;
 		}
 
-		return var / c.size();
+		return var / count.size();
 	}
 
-
+	
 	/**
-	 * Returns a representation of the count map with the keys sorted by their value.
-	 * This is particularly useful when the key does not implement the Comparable interface.
-	 * @see #sortByKeyValue(boolean)
+	 * Returns a list of key-value pairs that is sorted first by item counts, then by item comparisons if those objects implement {@link Comparable}.
+	 * The returned list is not backed by the item counter, so consider it a snapshot of the item counts.
 	 * @param isAscending if true, will sort keys in ascending value; if false, will sort keys in descending value
-	 * @return an unmodifiable List of (Key, Count) entries, sorted by the Count only.
+	 * @return an unmodifiable sorted list
 	 */
-	public List<Map.Entry<K, Integer>> sortByValue(boolean isAscending) {
-		Comparator<Map.Entry<K, Integer>> vc;
+	public List<KeyValuePair> sortByValueKey(boolean isAscending) {
+		Comparator<KeyValuePair> vc;
 		if(isAscending) {
-			vc = new ValueAscendingComparator();
+			vc = new KeyValueAscendingComparator();
 		} else {
-			vc = new ValueDescendingComparator();
+			vc = new KeyValueDescendingComparator();
 		}
-		List<Map.Entry<K, Integer>> sortedList = new ArrayList<Map.Entry<K, Integer>>();
-		sortedList.addAll(count.entrySet());
+		List<KeyValuePair> sortedList = new ArrayList<ItemCounter<K>.KeyValuePair>();
+		for(Entry<K, Integer> entry : count.entrySet()) {
+			sortedList.add(new KeyValuePair(entry));
+		}
 		Collections.sort(sortedList, vc);
 		return Collections.unmodifiableList(sortedList);
-	}
-
-
-	/**
-	 * Returns a representation of the count map with the keys sorted by their value.
-	 * Keys <b>must</b> implement the Comparable interface.
-	 * @see #sortByValue(boolean)
-	 * @param isAscending if true, will sort keys in ascending value; if false, will sort keys in descending value
-	 * @return an unmodifiable sorted TreeMap
-	 */
-	public Map<K, Integer> sortByKeyValue(boolean isAscending) {
-		Comparator<K> vc;
-		if(isAscending) {
-			vc = new KeyValueAscendingComparator(count);
-		} else {
-			vc = new KeyValueDescendingComparator(count);
-		}
-		TreeMap<K, Integer> sortedMap = new TreeMap<K, Integer>(vc);
-		sortedMap.putAll(count);
-		return Collections.unmodifiableMap(sortedMap);
 	}
 
 
@@ -408,56 +406,78 @@ public class ItemCounter<K extends Object> {
 	/**
 	 * Get a view of this as an unmodifiable object.
 	 * Methods {@link #increment(Object)} and {@link #set(Object, int)} will throw {@link UnsupportedOperationException} if called.
+	 * Note that the returned object is just a view of this modifiable ItemCounter, so it can change if the original item counter is changed.
 	 * @return an unmodifiable version of this object
 	 */
 	public ItemCounter<K> asUnmodifiable() {
-		return new ItemCounter<K>() {
+		return new UnmodifiableItemCounter(this);
+	}
+	
+	
+	/**
+	 * Wraps the item counter and prevents modification, although the backing item counter can still be modified.
+	 * @author romanows
+	 */
+	protected class UnmodifiableItemCounter extends ItemCounter<K> {
+		private final ItemCounter<K> itemCounter;
+		
+		public UnmodifiableItemCounter(ItemCounter<K> itemCounter) {
+			this.itemCounter = itemCounter;
+		}
+		
+		@Override
+		public Integer get(K item) {return itemCounter.get(item);}
 
-			@Override
-			public int increment(K item) {
-				throw new UnsupportedOperationException();
-			}
+		@Override
+		public void set(K item, int count) {
+			throw new UnsupportedOperationException();
+		}
 
-			@Override
-			public void set(K item, int count) {
-				throw new UnsupportedOperationException();
-			}
+		@Override
+		public int increment(K item) {
+			throw new UnsupportedOperationException();
+		}
 
-			@Override
-			public Integer get(K item) {return super.get(item);}
+		@Override
+		public long sum() {return itemCounter.sum();}
 
-			@Override
-			public int sum() {return super.sum();}
+		@Override
+		public double mean() {return itemCounter.mean();}
 
-			@Override
-			public double mean() {return super.mean();}
+		@Override
+		public double variance() {return itemCounter.variance();}
 
-			@Override
-			public double variance() {return super.variance();}
+		@Override
+		public double variancePopulation() {return itemCounter.variancePopulation();}
 
-			@Override
-			public List<Map.Entry<K, Integer>> sortByValue(boolean isAscending) {return super.sortByValue(isAscending);}
+		@Override
+		public List<KeyValuePair> sortByValueKey(boolean isAscending) {return itemCounter.sortByValueKey(isAscending);}
 
-			@Override
-			public Map<K, Integer> sortByKeyValue(boolean isAscending) {return super.sortByKeyValue(isAscending);}
+		@Override
+		public ItemCounter<Integer> countOfCounts() {return itemCounter.countOfCounts();}
 
-			@Override
-			public ItemCounter<Integer> countOfCounts() {return super.countOfCounts();}
+		@Override
+		public int size() {return itemCounter.size();}
 
-			@Override
-			public int size() {return super.size();}
+		@Override
+		public Set<K> getItems() {return itemCounter.getItems();}
 
-			@Override
-			public Set<K> getItems() {return super.getItems();}
+		@Override
+		public Map<K, Integer> getMap() {return itemCounter.getMap();}
 
-			@Override
-			public Map<K, Integer> getMap() {return super.getMap();}
+		@Override
+		public String toCSV() {return itemCounter.toCSV();}
 
-			@Override
-			public String toCSV() {return super.toCSV();}
-
-			@Override
-			public String toCSV(String columnDelimiter, String rowDelimiter) {return super.toCSV(columnDelimiter, rowDelimiter);}
-		};
+		@Override
+		public String toCSV(String columnDelimiter, String rowDelimiter) {return itemCounter.toCSV(columnDelimiter, rowDelimiter);}
+		
+		@Override
+		public void writeCSV(Writer writer) throws IOException {itemCounter.writeCSV(writer);}
+		
+		@Override
+		public void writeCSV(Writer writer, String columnDelimiter, String rowDelimiter) throws IOException {itemCounter.writeCSV(writer, columnDelimiter, rowDelimiter);}
+		
+		@Override
+		public ItemCounter<K> asUnmodifiable() {return itemCounter.asUnmodifiable();}
 	}
 }
