@@ -70,8 +70,8 @@ public class ItemCounter<K extends Object> {
 
 	/**  Holds key-value pairs for {@link ItemCounter#sortByValue(boolean)}. */
 	public class KeyValuePair {
-		K key;
-		Integer value;
+		private final K key;
+		private final Integer value;
 
 		public KeyValuePair(Entry<K, Integer> entry) {
 			this(entry.getKey(), entry.getValue());
