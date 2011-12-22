@@ -96,7 +96,7 @@ public class ItemCounter<K extends Object> {
 	 * Use with a map to compare first by value and second by key, if keys implement {@link Comparable}.
 	 * @author romanows
 	 */
-	protected class KeyValueAscendingComparator implements Comparator<KeyValuePair> {
+	protected class ValueKeyAscendingComparator implements Comparator<KeyValuePair> {
 		@Override
 		public int compare(KeyValuePair a, KeyValuePair b) {
 			int c = a.getValue().compareTo(b.getValue());
@@ -116,7 +116,7 @@ public class ItemCounter<K extends Object> {
 	 * Use with a map to compare first by value and second by key, if keys implement {@link Comparable}.
 	 * @author romanows
 	 */
-	protected class KeyValueDescendingComparator implements Comparator<KeyValuePair> {
+	protected class ValueKeyDescendingComparator implements Comparator<KeyValuePair> {
 		@Override
 		public int compare(KeyValuePair a, KeyValuePair b) {
 			int c = b.getValue().compareTo(a.getValue());
@@ -296,9 +296,9 @@ public class ItemCounter<K extends Object> {
 	public List<KeyValuePair> sortByValueKey(boolean isAscending) {
 		Comparator<KeyValuePair> vc;
 		if(isAscending) {
-			vc = new KeyValueAscendingComparator();
+			vc = new ValueKeyAscendingComparator();
 		} else {
-			vc = new KeyValueDescendingComparator();
+			vc = new ValueKeyDescendingComparator();
 		}
 		List<KeyValuePair> sortedList = new ArrayList<ItemCounter<K>.KeyValuePair>();
 		for(Entry<K, Integer> entry : count.entrySet()) {
