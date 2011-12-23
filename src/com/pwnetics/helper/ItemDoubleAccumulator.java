@@ -39,18 +39,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeMap;
+
 
 /**
- * Accumulates values associated with items.
+ * Use this to accumulate floating point values associated with objects and calculate simple statistics.
  * 
- * <p>The behavior of this class differs conceptually from {@link ItemCounter}.
- * In {@link ItemCounter}, any object that is not contained in the {@link ItemCounter} 
- * would be reported to have a count of zero.
- * In the {@link ItemDoubleAccumulator}, an object that has never been added to the 
- * accumulator will cause {@link #get(Object)} to return a null.
- * An object that has been added with a value of zero 
- * will cause {@link #get(Object)} to return zero.</p>
+ * <p>To accumulate objects, consider using {@link ItemDoubleAccumulator#add(Object, double)}; this will automatically add the value associated with the given object, introducing it into the collection if necessary.
+ * To query the accumulated value for an object, consider using {@link ItemDoubleAccumulator#get(Object)}; this will return the value associated with the given object.
+ * For objects that have not been added to an ItemCounter, the reported count is always null.
+ * </p>
+
+ * <p>This class behaves differently from {@link ItemCounter}.
+ * When {@link ItemDoubleAccumulator#get(Object)} is called for an object that was never added to {@link ItemDoubleAccumulator}, a "null" is returned.
+ * This allows {@link ItemDoubleAccumulator} to accumulate values that wind up at 0.0, and also start accumulating at 0.0 when new objects are introduced.
+ * </p>
  * 
  * @author romanows
  *
@@ -59,51 +61,47 @@ import java.util.TreeMap;
 public class ItemDoubleAccumulator<K extends Object> {
 
 	/** (item, value) */
-	protected Map<K, Double> acc;
+	protected final Map<K, Double> acc;
 
 
-	/**
-	 * Use with a map to compare by value instead of by key.
-	 * @author romanows
-	 */
-	protected class ValueAscendingComparator implements Comparator<Map.Entry<K, Double>> {
-		@Override
-		public int compare(Entry<K, Double> a, Entry<K, Double> b) {
-			return a.getValue().compareTo(b.getValue());
+	/**  Holds key-value pairs for {@link ItemDoubleAccumulator#sortByValueKey(boolean)}. */
+	public class KeyValuePair {
+		private final K key;
+		private final Double value;
+
+		public KeyValuePair(Entry<K, Double> entry) {
+			this(entry.getKey(), entry.getValue());
+		}
+
+		public KeyValuePair(K key, Double value) {
+			this.key = key;
+			this.value = value;
+		}
+		
+		public K getKey() {
+			return key;
+		}
+		
+		public Double getValue() {
+			return value;
 		}
 	}
 
-
+	
 	/**
-	 * Use with a map to compare by value instead of by key.
+	 * Use with a map to compare first by value and second by key, if keys implement {@link Comparable}.
 	 * @author romanows
 	 */
-	protected class ValueDescendingComparator implements Comparator<Map.Entry<K, Double>> {
+	protected class ValueKeyAscendingComparator implements Comparator<KeyValuePair> {
 		@Override
-		public int compare(Entry<K, Double> a, Entry<K, Double> b) {
-			return b.getValue().compareTo(a.getValue());
-		}
-	}
-
-
-	/**
-	 * Use with a map to compare first by value and second by key.
-	 * Note that keys must implement the Comparable interface.
-	 * @author romanows
-	 */
-	protected class KeyValueAscendingComparator implements Comparator<K> {
-		protected Map<K, Double> base;
-
-		public KeyValueAscendingComparator(Map<K, Double> base) {
-			this.base = base;
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public int compare(K a, K b) {
-			int c = base.get(a).compareTo(base.get(b));
+		public int compare(KeyValuePair a, KeyValuePair b) {
+			int c = a.getValue().compareTo(b.getValue());
 			if(c == 0) {
-				return ((Comparable<K>)a).compareTo(b);
+				if(a.getKey() instanceof Comparable<?>) {
+					@SuppressWarnings("unchecked")
+					Comparable<K> x = (Comparable<K>)a.getKey(); 
+					return x.compareTo(b.getKey());	
+				}
 			}
 			return c;
 		}
@@ -111,40 +109,34 @@ public class ItemDoubleAccumulator<K extends Object> {
 
 
 	/**
-	 * Use with a map to compare first by value and second by key.
-	 * Note that keys must implement the Comparable interface.
+	 * Use with a map to compare first by value and second by key, if keys implement {@link Comparable}.
 	 * @author romanows
 	 */
-	protected class KeyValueDescendingComparator implements Comparator<K> {
-		protected Map<K, Double> base;
-
-		public KeyValueDescendingComparator(Map<K, Double> base) {
-			this.base = base;
-		}
-
+	protected class ValueKeyDescendingComparator implements Comparator<KeyValuePair> {
 		@Override
-		@SuppressWarnings("unchecked")
-		public int compare(K a, K b) {
-			int c = base.get(b).compareTo(base.get(a));
+		public int compare(KeyValuePair a, KeyValuePair b) {
+			int c = b.getValue().compareTo(a.getValue());
 			if(c == 0) {
-				return ((Comparable<K>)b).compareTo(a);
+				if(a.getKey() instanceof Comparable<?>) {
+					@SuppressWarnings("unchecked")
+					Comparable<K> x = (Comparable<K>)b.getKey(); 
+					return x.compareTo(a.getKey());	
+				}
 			}
 			return c;
 		}
 	}
 
 
-	/**
-	 * Constructor.
-	 */
+	/** Constructor */
 	public ItemDoubleAccumulator() {
 		acc = new HashMap<K, Double>();
 	}
 
 
 	/**
-	 * Get the accumulated value of an item
-	 * @param item the item whose accumulated value will be returned
+	 * Get the accumulated value of an item.
+	 * @param item item whose accumulated value will be returned
 	 * @return the item's accumulated value or null if the requested item has never been added to this set
 	 */
 	public Double get(K item) {
@@ -195,26 +187,15 @@ public class ItemDoubleAccumulator<K extends Object> {
 
 
 	/**
-	 * Get the total sum of all item counts in this collection.
-	 * @return the total sum of all item counts, or null if nothing has been accumulated.
+	 * Get the total sum of all item values in this collection.
+	 * @return the total sum of all item values, or null if nothing has been accumulated.
 	 */
 	public Double sum() {
 		if(acc.isEmpty()) {
 			return null;
 		}
-		return sum(acc.values());
-	}
-
-
-	/**
-	 * Sum all elements of the given collection.
-	 * @param c some collection
-	 * @return the sum of the collection or zero if the collection is empty
-	 * @throws NullPointerException if an element is null
-	 */
-	protected static double sum(Collection<Double> c) {
 		Double sum = 0.0;
-		for(Double n : c) {
+		for(Double n : acc.values()) {
 			sum += n;
 		}
 		return sum;
@@ -249,88 +230,143 @@ public class ItemDoubleAccumulator<K extends Object> {
 
 
 	/**
-	 * Get the mean of all item counts in this collection.
-	 * @return the mean of all item counts, or zero if empty.
+	 * Returns the key/value pair with the lowest value (and secondarily with the "lowest" key).
+	 * Not stable; if there are multiple "different" items that compare as equal (for example, if the keys don't implement {@link Comparable}),
+	 * then it is possible for multiple calls to this method to return multiple answers.
+	 * @return key/value pair with the lowest value, or <null,null> if the accumulator is empty 
 	 */
-	public double mean() {
-		return mean(acc.values());
+	public KeyValuePair min() {
+		if(acc.isEmpty()) {
+			return new KeyValuePair(null,null);
+		}
+		KeyValuePair pair = null;
+		ValueKeyAscendingComparator vc = new ValueKeyAscendingComparator();
+		for(Entry<K, Double> entry : acc.entrySet()) {
+			KeyValuePair entryPair = new KeyValuePair(entry); 
+			if(pair == null) {
+				pair = entryPair;
+			} else {
+				if(vc.compare(pair, entryPair) > 0) {
+					pair = entryPair;
+				}
+			}
+		}
+		return pair;
+	}
+	
+	
+	/**
+	 * Returns the key/value pair with the largest value (and secondarily with the "largest" key).
+	 * Not stable; if there are multiple "different" items that compare as equal (for example, if the keys don't implement {@link Comparable}),
+	 * then it is possible for multiple calls to this method to return multiple answers.
+	 * @return key/value pair with the lowest value, or <null,null> if the accumulator is empty 
+	 */
+	public KeyValuePair max() {
+		if(acc.isEmpty()) {
+			return new KeyValuePair(null,null);
+		}
+		KeyValuePair pair = null;
+		ValueKeyDescendingComparator vc = new ValueKeyDescendingComparator();
+		for(Entry<K, Double> entry : acc.entrySet()) {
+			KeyValuePair entryPair = new KeyValuePair(entry); 
+			if(pair == null) {
+				pair = entryPair;
+			} else {
+				if(vc.compare(pair, entryPair) > 0) {
+					pair = entryPair;
+				}
+			}
+		}
+		return pair;
+	}
+
+	
+	/**
+	 * Get the mean of all item values in this collection.
+	 * @return the mean of all item values, or null if empty.
+	 */
+	public Double mean() {
+		if(acc.isEmpty()) {
+			return null;
+		}
+		return sum()/acc.size();
 	}
 
 
 	/**
-	 * Average elements in a collection.
-	 * @param c some collection
-	 * @return the average of the elements
+	 * Get the sample variance of all item values in this collection.
+	 * Use this variance if you desire an estimate of the variance of some population of items, of which the current ItemDoubleAccumulator contains only an incomplete sample.
+	 * Otherwise, see {@link #variancePopulation()}.
+	 * 
+	 * @return the sample variance of all item values, or null if empty.
 	 */
-	protected static double mean(Collection<Double> c) {
-		return sum(c)/c.size();
-	}
-
-
-	/**
-	 * Get the variance of all item counts in this collection.
-	 * @return the varniance of all item counts, or zero if empty.
-	 */
-	public double variance() {
-		return variance(acc.values());
-	}
-
-
-	/**
-	 * Compute the variance over elements in a collection.
-	 * @param c some collection
-	 * @return the variance over elements
-	 */
-	protected static double variance(Collection<Double> c) {
-		double mean = mean(c);
+	public Double variance() {
+		if(acc.isEmpty()) {
+			return null;
+		}
+		if(acc.size() < 2) {
+			return 0.0;
+		}
+		double mean = mean();
 		double var = 0.0;
-		for(Double n : c) {
+		for(Double n : acc.values()) {
 			double foo = mean - n;
 			var += foo * foo;
 		}
 
-		return var / c.size();
+		return var / (acc.size()-1);
 	}
 
-
+	
 	/**
-	 * Returns a representation of the count map with the keys sorted by their value.
-	 * This is particularly useful when the key does not implement the Comparable interface.
-	 * @see #sortByKeyValue(boolean)
-	 * @param isAscending if true, will sort keys in ascending value; if false, will sort keys in descending value
-	 * @return an unmodifiable List of (Key, Accumulated) entries, sorted by the Accumulated value only.
+	 * Get the population variance of all item values in this collection.
+	 * Use this variance if you desire to know only the variance of the items in this ItemDoubleAccumulator only, otherwise see {@link #variance()}.
+	 * 
+	 * <p>There is little difference between the sample and population variance when there are many distinct items.
+	 * When there are few items, the difference is pronounced.
+	 * In general, it is probably better to use the sample variance {@link #variance()}.
+	 * </p>
+	 *  
+	 * @return the population variance of all item values, or null if empty.
 	 */
-	public List<Map.Entry<K, Double>> sortByValue(boolean isAscending) {
-		Comparator<Map.Entry<K, Double>> vc;
-		if(isAscending) {
-			vc = new ValueAscendingComparator();
-		} else {
-			vc = new ValueDescendingComparator();
+	public Double variancePopulation() {
+		if(acc.isEmpty()) {
+			return null;
 		}
-		List<Map.Entry<K, Double>> sortedList = new ArrayList<Map.Entry<K, Double>>();
-		sortedList.addAll(acc.entrySet());
+		double mean = mean();
+		double var = 0.0;
+		for(Double n : acc.values()) {
+			double foo = mean - n;
+			var += foo * foo;
+		}
+
+		return var / (acc.size());
+	}
+	
+	
+	/**
+	 * Returns a representation of the item-to-accumulated-value map with the keys sorted by their value, and then sorted by keys if the keys implement {@link Comparable}.
+	 * 
+	 * <p>This sort is not stable; if there are multiple "different" items that compare as equal (for example, if the keys don't implement {@link Comparable}),
+	 * then it is possible for multiple calls to this method to return various orderings.
+	 * </p>
+	 * 
+	 * @param isAscending if true, will sort values and keys in ascending value; if false, will sort values and keys in descending value
+	 * @return an unmodifiable sorted list
+	 */
+	public List<KeyValuePair> sortByValueKey(boolean isAscending) {
+		Comparator<KeyValuePair> vc;
+		if(isAscending) {
+			vc = new ValueKeyAscendingComparator();
+		} else {
+			vc = new ValueKeyDescendingComparator();
+		}
+		List<KeyValuePair> sortedList = new ArrayList<ItemDoubleAccumulator<K>.KeyValuePair>();
+		for(Entry<K, Double> entry : acc.entrySet()) {
+			sortedList.add(new KeyValuePair(entry));
+		}
 		Collections.sort(sortedList, vc);
 		return Collections.unmodifiableList(sortedList);
-	}
-
-
-	/**
-	 * Returns a representation of the count map with the keys sorted by their value.
-	 * Keys <b>must</b> implement the Comparable interface.
-	 * @see #sortByValue(boolean)
-	 * @param isAscending if true, will sort keys in ascending value; if false, will sort keys in descending value
-	 * @return an unmodifiable sorted TreeMap
-	 */
-	public Map<K, Double> sortByKeyValue(boolean isAscending) {
-		Comparator<K> vc;
-		if(isAscending) {
-			vc = new KeyValueAscendingComparator(acc);
-		} else {
-			vc = new KeyValueDescendingComparator(acc);
-		}
-		TreeMap<K, Double> sortedMap = new TreeMap<K, Double>(vc);
-		sortedMap.putAll(acc);
-		return Collections.unmodifiableMap(sortedMap);
 	}
 
 
@@ -345,7 +381,7 @@ public class ItemDoubleAccumulator<K extends Object> {
 
 
 	/**
-	 * Get all items in this counter.
+	 * Get all items in this accumulator.
 	 * @return all item keys
 	 */
 	public Set<K> getItems() {
@@ -422,54 +458,76 @@ public class ItemDoubleAccumulator<K extends Object> {
 	 * @return an unmodifiable version of this object
 	 */
 	public ItemDoubleAccumulator<K> asUnmodifiable() {
-		return new ItemDoubleAccumulator<K>() {
-			@Override
-			public Double get(K item) {return super.get(item);}
+		return new UnmodifiableItemDoubleAccumulator(this);
+	}
+	
+	
+	/**
+	 * Wraps the item counter and prevents modification, although the backing item accumulator can still be modified.
+	 * @author romanows
+	 */
+	protected class UnmodifiableItemDoubleAccumulator extends ItemDoubleAccumulator<K> {
+		private final ItemDoubleAccumulator<K> acc;
+		
+		public UnmodifiableItemDoubleAccumulator(ItemDoubleAccumulator<K> acc) {
+			this.acc = acc;
+		}
+		
+		@Override
+		public Double get(K item) {return acc.get(item);}
 
-			@Override
-			public void set(K item, double value) {
-				throw new UnsupportedOperationException();
-			}
+		@Override
+		public void set(K item, double value) {
+			throw new UnsupportedOperationException();
+		}
 
-			@Override
-			public double add(K item, double value) {
-				throw new UnsupportedOperationException();
-			}
+		@Override
+		public double add(K item, double value) {
+			throw new UnsupportedOperationException();
+		}
+		
+		@Override
+		public void add(ItemDoubleAccumulator<K> a) {
+			throw new UnsupportedOperationException();
+		}
 
-			@Override
-			public void add(ItemDoubleAccumulator<K> a) {
-				throw new UnsupportedOperationException();
-			}
+		@Override
+		public Double sum() {return acc.sum();}
 
-			@Override
-			public Double sum() {return super.sum();}
+		@Override
+		public Double mean() {return acc.mean();}
 
-			@Override
-			public double mean() {return super.mean();}
+		@Override
+		public Double variance() {return acc.variance();}
 
-			@Override
-			public double variance() {return super.variance();}
+		@Override
+		public Double variancePopulation() {return acc.variancePopulation();}
 
-			@Override
-			public List<Map.Entry<K, Double>> sortByValue(boolean isAscending) {return super.sortByValue(isAscending);}
+		@Override
+		public List<KeyValuePair> sortByValueKey(boolean isAscending) {return acc.sortByValueKey(isAscending);}
 
-			@Override
-			public Map<K, Double> sortByKeyValue(boolean isAscending) {return super.sortByKeyValue(isAscending);}
+		@Override
+		public int size() {return acc.size();}
 
-			@Override
-			public int size() {return super.size();}
+		@Override
+		public Set<K> getItems() {return acc.getItems();}
 
-			@Override
-			public Set<K> getItems() {return super.getItems();}
+		@Override
+		public Map<K, Double> getMap() {return acc.getMap();}
 
-			@Override
-			public Map<K, Double> getMap() {return super.getMap();}
+		@Override
+		public String toCSV() {return acc.toCSV();}
 
-			@Override
-			public String toCSV() {return super.toCSV();}
-
-			@Override
-			public String toCSV(String columnDelimiter, String rowDelimiter) {return super.toCSV(columnDelimiter, rowDelimiter);}
-		};
+		@Override
+		public String toCSV(String columnDelimiter, String rowDelimiter) {return acc.toCSV(columnDelimiter, rowDelimiter);}
+		
+		@Override
+		public void writeCSV(Writer writer) throws IOException {acc.writeCSV(writer);}
+		
+		@Override
+		public void writeCSV(Writer writer, String columnDelimiter, String rowDelimiter) throws IOException {acc.writeCSV(writer, columnDelimiter, rowDelimiter);}
+		
+		@Override
+		public ItemDoubleAccumulator<K> asUnmodifiable() {return acc.asUnmodifiable();}
 	}
 }

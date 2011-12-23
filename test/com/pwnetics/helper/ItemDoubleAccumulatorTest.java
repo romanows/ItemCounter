@@ -28,14 +28,11 @@ authors.
 
 package com.pwnetics.helper;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Map.Entry;
 
 import org.junit.Test;
 
@@ -59,7 +56,7 @@ public class ItemDoubleAccumulatorTest {
 	}
 
 	@Test
-	public void testIncrement() {
+	public void testAdd1() {
 		ItemDoubleAccumulator<String> ic = new ItemDoubleAccumulator<String>();
 		assertTrue(ic.get("a") == null);
 		assertTrue(ic.add("a", 0.25) == 0.25);
@@ -67,6 +64,25 @@ public class ItemDoubleAccumulatorTest {
 		assertTrue(ic.add("a", -0.5) == 0.25);
 		ic.set("a", 42);
 		assertTrue(ic.add("a",0.42) == 42.0 + 0.42);
+	}
+	
+	@Test
+	public void testAdd2() {
+		ItemDoubleAccumulator<String> ic1 = new ItemDoubleAccumulator<String>();
+		ItemDoubleAccumulator<String> ic2 = new ItemDoubleAccumulator<String>();
+		ic1.add("a",1.0);
+		ic1.add("a",1.0);
+		ic1.add("b",2.0);
+		ic1.add("b",3.0);
+		ic1.add("c",5.0);
+		ic2.add("b",-5.0);
+		ic2.add("c",-8.0);
+		ic2.add("d",-13.0);
+		ic1.add(ic2);
+		assertTrue(ic1.get("a") == 2.0);
+		assertTrue(ic1.get("b") == 0.0);
+		assertTrue(ic1.get("c") == -3.0);
+		assertTrue(ic1.get("d") == -13.0);
 	}
 
 	@Test
@@ -86,6 +102,128 @@ public class ItemDoubleAccumulatorTest {
 	}
 
 	@Test
+	public void testMinMax() {
+		ItemDoubleAccumulator<String> ic = new ItemDoubleAccumulator<String>();
+		ItemDoubleAccumulator<String>.KeyValuePair mn = ic.min();
+		ItemDoubleAccumulator<String>.KeyValuePair mx = ic.max();
+		
+		assertTrue(mn.getKey() == null);
+		assertTrue(mn.getValue() == null);
+		assertTrue(mx.getKey() == null);
+		assertTrue(mx.getValue() == null);
+		
+		ic.add("a",1.0);		
+		mn = ic.min();
+		mx = ic.max();
+		
+		assertTrue(mn.getKey() == "a");
+		assertTrue(mn.getValue() == 1.0);
+		assertTrue(mx.getKey() == "a");
+		assertTrue(mx.getValue() == 1.0);
+		
+		ic.add("b",1.0);
+		mn = ic.min();
+		mx = ic.max();
+
+		assertTrue(mn.getKey() == "a");
+		assertTrue(mn.getValue() == 1.0);
+		assertTrue(mx.getKey() == "b");
+		assertTrue(mx.getValue() == 1.0);
+		
+		ic.add("c",1.0);
+		mn = ic.min();
+		mx = ic.max();
+
+		assertTrue(mn.getKey() == "a");
+		assertTrue(mn.getValue() == 1.0);
+		assertTrue(mx.getKey() == "c");
+		assertTrue(mx.getValue() == 1.0);
+		
+		ic.set("b",3.0);
+		mn = ic.min();
+		mx = ic.max();
+
+		assertTrue(mn.getKey() == "a");
+		assertTrue(mn.getValue() == 1.0);
+		assertTrue(mx.getKey() == "b");
+		assertTrue(mx.getValue() == 3.0);
+		
+		ic.set("a",2.0);
+		mn = ic.min();
+		mx = ic.max();
+
+		assertTrue(mn.getKey() == "c");
+		assertTrue(mn.getValue() == 1.0);
+		assertTrue(mx.getKey() == "b");
+		assertTrue(mx.getValue() == 3.0);
+	}
+
+	@Test
+	public void testMean() {
+		ItemDoubleAccumulator<String> ic = new ItemDoubleAccumulator<String>();
+		assertTrue(ic.mean() == null);
+		ic.add("a",1.0);
+		assertTrue(ic.mean() == 1.0);
+		ic.add("b",1.0);
+		assertTrue(ic.mean() == 1.0);
+		ic.add("c",1.0);
+		assertTrue(ic.mean() == 1.0);
+		ic.add("a",1.0);
+		assertTrue(ic.mean() == (2+1+1)/3.0);
+		ic.add("b",1.0);
+		assertTrue(ic.mean() == (2+2+1)/3.0);
+		ic.add("c",1.0);
+		assertTrue(ic.mean() == 2.0);
+		
+		ic.set("a", Integer.MAX_VALUE);
+		assertTrue(ic.mean() == 2147483651.0/3.0);
+	}	
+	
+	@Test
+	public void testVariancePopulation() {
+		ItemDoubleAccumulator<String> ic = new ItemDoubleAccumulator<String>();
+		assertTrue(ic.variancePopulation() == null);
+		ic.add("a",1.0);
+		assertTrue(ic.variancePopulation() == 0);
+		ic.add("b",1.0);
+		assertTrue(ic.variancePopulation() == 0);
+		ic.add("c",1.0);
+		assertTrue(ic.variancePopulation() == 0);
+		ic.add("a",1.0);
+		assertTrue(ic.variancePopulation() == 2.0 / 9.0);
+		ic.add("b",1.0);
+		assertTrue(ic.variancePopulation() == 2.0 / 9.0);
+		ic.add("c",1.0);
+		assertTrue(ic.variancePopulation() == 0.0);
+		
+		ic.set("a", Integer.MAX_VALUE);
+		double expected = 9223372011084972050.0/9.0; 
+		assertEquals(expected, ic.variancePopulation(), expected * 1e-9);  // epsilon is relative to magnitude of expected value; arbitrarily chosen amount
+	}
+	
+	@Test
+	public void testVariance() {
+		ItemDoubleAccumulator<String> ic = new ItemDoubleAccumulator<String>();
+		assertTrue(ic.variance() == null);
+		ic.add("a",1.0);
+		assertTrue(ic.variance() == 0);
+		ic.add("b",1.0);
+		assertTrue(ic.variance() == 0);
+		ic.add("c",1.0);
+		assertTrue(ic.variance() == 0);
+		ic.add("a",1.0);
+		assertTrue(ic.variance() == 1.0 / 3.0);
+		ic.add("b",1.0);
+		assertTrue(ic.variance() == 1.0 / 3.0);
+		ic.add("c",1.0);
+		assertTrue(ic.variance() == 0.0);
+		
+		ic.set("a", Integer.MAX_VALUE);
+		double expected = 4611686005542486025.0/3.0; 
+		assertEquals(expected, ic.variance(), expected * 1e-9);  // epsilon is relative to magnitude of expected value; arbitrarily chosen amount
+	}
+	
+	@Test
 	public void testSize() {
 		ItemDoubleAccumulator<String> ic = new ItemDoubleAccumulator<String>();
 		assertTrue(ic.size() == 0);
@@ -102,56 +240,45 @@ public class ItemDoubleAccumulatorTest {
 	}
 
 	@Test
-	public void testSortByValue() {
-		ItemDoubleAccumulator<String> ic = new ItemDoubleAccumulator<String>();
-		ic.add("a", 1.0);
-		ic.add("b", 1.0);
-		ic.add("a", 1.0);
-		ic.add("c", 1.0);
-		List<Entry<String, Double>> descending = ic.sortByValue(false);
-		assertTrue(descending.get(0).getKey().equals("a"));
-		List<Entry<String, Double>> ascending = ic.sortByValue(true);
-		assertTrue(ascending.get(2).getKey().equals("a"));
-	}
-
-	@Test
 	public void testSortByKeyValue() {
 		ItemDoubleAccumulator<String> ic = new ItemDoubleAccumulator<String>();
 		ic.add("a", 1.0);
 		ic.add("b", 1.0);
 		ic.add("a", 1.0);
 		ic.add("c", 1.0);
-		Map<String, Double> descendingMap = ic.sortByKeyValue(false);
-		List<Entry<String, Double>> descending = new ArrayList<Entry<String, Double>>(descendingMap.entrySet()); 
+		List<ItemDoubleAccumulator<String>.KeyValuePair> descending = ic.sortByValueKey(false); 
 		assertTrue(descending.get(0).getKey().equals("a"));
 		assertTrue(descending.get(1).getKey().equals("c"));
 		assertTrue(descending.get(2).getKey().equals("b"));
 		
-		Map<String, Double> ascendingMap = ic.sortByKeyValue(true);
-		List<Entry<String, Double>> ascending = new ArrayList<Entry<String, Double>>(ascendingMap.entrySet());
+		List<ItemDoubleAccumulator<String>.KeyValuePair> ascending = ic.sortByValueKey(true);
 		assertTrue(ascending.get(2).getKey().equals("a"));
 		assertTrue(ascending.get(1).getKey().equals("c"));
 		assertTrue(ascending.get(0).getKey().equals("b"));
 	}
 	
 	@Test
-	public void testSumSafer() {
-		Random valRnd = new Random(42);
-		Random shuffleRnd = new Random(42);
-		List<Double> c = new ArrayList<Double>();
-
-		for(int i=0; i<100000; i++) {
-			c.add(valRnd.nextDouble());
+	public void testAsUnmodifiable() {
+		ItemDoubleAccumulator<String> ic = new ItemDoubleAccumulator<String>();
+		ic.add("a", 1.0);
+		ic.add("b", 1.0);
+		ic.add("a", 1.0);
+		ic.add("c", 1.0);
+		
+		ItemDoubleAccumulator<String> uc = ic.asUnmodifiable();
+		assertTrue(uc.get("a") == 2.0);
+		assertTrue(uc.get("b") == 1.0);
+		try {
+			uc.add("a", 1.0);
+			fail("unmodifiable ItemCounter should throw an exception");
+		} catch(UnsupportedOperationException e) {
+			// pass
 		}
-
-		List<Double> normalSum = new ArrayList<Double>();
-		List<Double> saferSum = new ArrayList<Double>();
-		for(int j=0; j<10; j++) {
-			normalSum.add(ItemDoubleAccumulator.sum(c));
-			saferSum.add(ItemDoubleAccumulator.sumKahan(c));
-			Collections.shuffle(c,shuffleRnd);
+		try {
+			uc.set("a",5.0);
+			fail("unmodifiable ItemCounter should throw an exception");
+		} catch(UnsupportedOperationException e) {
+			// pass
 		}
-//		System.out.println((CollectionMath.variance(normalSum) - 7e-20) + "\t" + CollectionMath.variance(saferSum));
-		assertTrue(ItemDoubleAccumulator.variance(normalSum) - 7e-20 > ItemDoubleAccumulator.variance(saferSum));
 	}
 }
