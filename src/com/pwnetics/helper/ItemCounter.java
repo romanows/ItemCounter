@@ -68,7 +68,7 @@ public class ItemCounter<K extends Object> {
 	protected final Map<K, Integer> count;
 
 
-	/**  Holds key-value pairs for {@link ItemCounter#sortByValue(boolean)}. */
+	/**  Holds key-value pairs for {@link ItemCounter#sortByValueKey(boolean)}. */
 	public class KeyValuePair {
 		private final K key;
 		private final Integer value;
