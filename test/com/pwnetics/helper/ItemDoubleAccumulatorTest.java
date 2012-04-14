@@ -65,7 +65,7 @@ public class ItemDoubleAccumulatorTest {
 		ic.set("a", 42);
 		assertTrue(ic.add("a",0.42) == 42.0 + 0.42);
 	}
-	
+
 	@Test
 	public void testAdd2() {
 		ItemDoubleAccumulator<String> ic1 = new ItemDoubleAccumulator<String>();
@@ -106,21 +106,21 @@ public class ItemDoubleAccumulatorTest {
 		ItemDoubleAccumulator<String> ic = new ItemDoubleAccumulator<String>();
 		ItemDoubleAccumulator<String>.KeyValuePair mn = ic.min();
 		ItemDoubleAccumulator<String>.KeyValuePair mx = ic.max();
-		
+
 		assertTrue(mn.getKey() == null);
 		assertTrue(mn.getValue() == null);
 		assertTrue(mx.getKey() == null);
 		assertTrue(mx.getValue() == null);
-		
-		ic.add("a",1.0);		
+
+		ic.add("a",1.0);
 		mn = ic.min();
 		mx = ic.max();
-		
+
 		assertTrue(mn.getKey() == "a");
 		assertTrue(mn.getValue() == 1.0);
 		assertTrue(mx.getKey() == "a");
 		assertTrue(mx.getValue() == 1.0);
-		
+
 		ic.add("b",1.0);
 		mn = ic.min();
 		mx = ic.max();
@@ -129,7 +129,7 @@ public class ItemDoubleAccumulatorTest {
 		assertTrue(mn.getValue() == 1.0);
 		assertTrue(mx.getKey() == "b");
 		assertTrue(mx.getValue() == 1.0);
-		
+
 		ic.add("c",1.0);
 		mn = ic.min();
 		mx = ic.max();
@@ -138,7 +138,7 @@ public class ItemDoubleAccumulatorTest {
 		assertTrue(mn.getValue() == 1.0);
 		assertTrue(mx.getKey() == "c");
 		assertTrue(mx.getValue() == 1.0);
-		
+
 		ic.set("b",3.0);
 		mn = ic.min();
 		mx = ic.max();
@@ -147,7 +147,7 @@ public class ItemDoubleAccumulatorTest {
 		assertTrue(mn.getValue() == 1.0);
 		assertTrue(mx.getKey() == "b");
 		assertTrue(mx.getValue() == 3.0);
-		
+
 		ic.set("a",2.0);
 		mn = ic.min();
 		mx = ic.max();
@@ -174,11 +174,11 @@ public class ItemDoubleAccumulatorTest {
 		assertTrue(ic.mean() == (2+2+1)/3.0);
 		ic.add("c",1.0);
 		assertTrue(ic.mean() == 2.0);
-		
+
 		ic.set("a", Integer.MAX_VALUE);
 		assertTrue(ic.mean() == 2147483651.0/3.0);
-	}	
-	
+	}
+
 	@Test
 	public void testVariancePopulation() {
 		ItemDoubleAccumulator<String> ic = new ItemDoubleAccumulator<String>();
@@ -195,12 +195,12 @@ public class ItemDoubleAccumulatorTest {
 		assertTrue(ic.variancePopulation() == 2.0 / 9.0);
 		ic.add("c",1.0);
 		assertTrue(ic.variancePopulation() == 0.0);
-		
+
 		ic.set("a", Integer.MAX_VALUE);
-		double expected = 9223372011084972050.0/9.0; 
+		double expected = 9223372011084972050.0/9.0;
 		assertEquals(expected, ic.variancePopulation(), expected * 1e-9);  // epsilon is relative to magnitude of expected value; arbitrarily chosen amount
 	}
-	
+
 	@Test
 	public void testVariance() {
 		ItemDoubleAccumulator<String> ic = new ItemDoubleAccumulator<String>();
@@ -217,12 +217,12 @@ public class ItemDoubleAccumulatorTest {
 		assertTrue(ic.variance() == 1.0 / 3.0);
 		ic.add("c",1.0);
 		assertTrue(ic.variance() == 0.0);
-		
+
 		ic.set("a", Integer.MAX_VALUE);
-		double expected = 4611686005542486025.0/3.0; 
+		double expected = 4611686005542486025.0/3.0;
 		assertEquals(expected, ic.variance(), expected * 1e-9);  // epsilon is relative to magnitude of expected value; arbitrarily chosen amount
 	}
-	
+
 	@Test
 	public void testSize() {
 		ItemDoubleAccumulator<String> ic = new ItemDoubleAccumulator<String>();
@@ -246,17 +246,17 @@ public class ItemDoubleAccumulatorTest {
 		ic.add("b", 1.0);
 		ic.add("a", 1.0);
 		ic.add("c", 1.0);
-		List<ItemDoubleAccumulator<String>.KeyValuePair> descending = ic.sortByValueKey(false); 
+		List<ItemDoubleAccumulator<String>.KeyValuePair> descending = ic.sortByValueKey(false);
 		assertTrue(descending.get(0).getKey().equals("a"));
 		assertTrue(descending.get(1).getKey().equals("c"));
 		assertTrue(descending.get(2).getKey().equals("b"));
-		
+
 		List<ItemDoubleAccumulator<String>.KeyValuePair> ascending = ic.sortByValueKey(true);
 		assertTrue(ascending.get(2).getKey().equals("a"));
 		assertTrue(ascending.get(1).getKey().equals("c"));
 		assertTrue(ascending.get(0).getKey().equals("b"));
 	}
-	
+
 	@Test
 	public void testAsUnmodifiable() {
 		ItemDoubleAccumulator<String> ic = new ItemDoubleAccumulator<String>();
@@ -264,7 +264,7 @@ public class ItemDoubleAccumulatorTest {
 		ic.add("b", 1.0);
 		ic.add("a", 1.0);
 		ic.add("c", 1.0);
-		
+
 		ItemDoubleAccumulator<String> uc = ic.asUnmodifiable();
 		assertTrue(uc.get("a") == 2.0);
 		assertTrue(uc.get("b") == 1.0);
