@@ -40,7 +40,7 @@ import java.util.Map;
  *
  * <p>While it is possible to use this class as a mutable item counter, every {@link #set(Object, int)} or {@link #increment(Object)}
  * operation incurs a cache-invalidation cost.
- * The recommended usage is to build counts using {@link ItemCounter}, then use {@link #build(ItemCounter)} to produce an object
+ * The recommended usage is to build counts using {@link ItemCounter}, then use {@link #build(ItemCounter, boolean)} to produce an object
  * of this class to analyze the counts.
  * </p>
  *
@@ -71,7 +71,7 @@ public class CachingItemCounter<K> extends ItemCounter<K> {
 	 * @param ic ItemCounter to "convert" to a {@link CachingItemCounter}
 	 * @param isCopyingCount if false, references the internal state of the given item counter; if true, will become independent of the future operations performed on the given item counter.
 	 *   Setting this to "true" is safest, but does incur a memory storage and copy cost.
-	 * @return
+	 * @return a new instance of a caching item counter that is either a dependent view or an independent snapshot of the given item counter
 	 */
 	public static <K> CachingItemCounter<K> build(ItemCounter<K> ic, boolean isCopyingCount) {
 		return new CachingItemCounter<K>(ic.count, isCopyingCount);
