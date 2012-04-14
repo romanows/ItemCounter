@@ -1,3 +1,31 @@
+/*
+Copyright 2012 Brian Romanowski. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are
+permitted provided that the following conditions are met:
+
+   1. Redistributions of source code must retain the above copyright notice, this list of
+      conditions and the following disclaimer.
+
+   2. Redistributions in binary form must reproduce the above copyright notice, this list
+      of conditions and the following disclaimer in the documentation and/or other materials
+      provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY BRIAN ROMANOWSKI ``AS IS'' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL BRIAN ROMANOWSKI OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+The views and conclusions contained in the software and documentation are those of the
+authors.
+*/
+
+
 package com.pwnetics.helper;
 
 import java.util.Map;
@@ -6,7 +34,7 @@ import java.util.Map;
 /**
  * An {@link ItemCounter} that caches values for some of the moderately computationally expensive method calls.
  *
- * <p>On the first call to a cachable method, or whenever the counter has changed, the original expensive method will be called.
+ * <p>On the first call to a cacheable method, or whenever the counter has changed, the original expensive method will be called.
  * Thereafter, until the counter is changed, the cached value will be returned.
  * </p>
  *
@@ -63,7 +91,7 @@ public class CachingItemCounter<K> extends ItemCounter<K> {
 		invalidate();
 	}
 
-	/** Marks all cachable values as invalid. */
+	/** Marks all cacheable values as invalid. */
 	protected void invalidate() {
 		sum = -1L;
 		min = null;
@@ -75,8 +103,8 @@ public class CachingItemCounter<K> extends ItemCounter<K> {
 	}
 
 	/**
-	 * Loads all cachable values, so this is fairly computationally expensive.
-	 * However, future calls to cachable methods won't incur an initial performance hit, so long as the item counter is not modified after calling this cacheAll() method.
+	 * Loads all cacheable values, so this is fairly computationally expensive.
+	 * However, future calls to cacheable methods won't incur an initial performance hit, so long as the item counter is not modified after calling this cacheAll() method.
 	 */
 	public void cacheAll() {
 		if(sum < 0) {
