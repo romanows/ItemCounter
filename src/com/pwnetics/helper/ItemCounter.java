@@ -42,16 +42,16 @@ import java.util.Set;
 
 /**
  * Use this to count objects and calculate simple statistics.
- * 
+ *
  * <p>To count objects, consider using {@link ItemCounter#increment(Object)}; this will automatically increment the count associated with the given object.
  * To query the count for an object, consider using {@link ItemCounter#get(Object)}; this will return the count associated with the given object.
  * For objects that have not been added to an ItemCounter, the reported count is always zero.
  * </p>
- * 
+ *
  * <p>An object's count will change when the object's count is {@link #set(Object, int)},
- * or when an object is passed to the {@link #increment(Object)} method such that the 
+ * or when an object is passed to the {@link #increment(Object)} method such that the
  * new object is equals() to the object already contained in the ItemCounter.
- * Counts are always non-negative.</p>   
+ * Counts are always non-negative.</p>
  *
  * @author romanows
  *
@@ -81,17 +81,17 @@ public class ItemCounter<K extends Object> {
 			this.key = key;
 			this.value = value;
 		}
-		
+
 		public K getKey() {
 			return key;
 		}
-		
+
 		public Integer getValue() {
 			return value;
 		}
 	}
 
-	
+
 	/**
 	 * Use with a map to compare first by value and second by key, if keys implement {@link Comparable}.
 	 * @author romanows
@@ -103,8 +103,8 @@ public class ItemCounter<K extends Object> {
 			if(c == 0) {
 				if(a.getKey() instanceof Comparable<?>) {
 					@SuppressWarnings("unchecked")
-					Comparable<K> x = (Comparable<K>)a.getKey(); 
-					return x.compareTo(b.getKey());	
+					Comparable<K> x = (Comparable<K>)a.getKey();
+					return x.compareTo(b.getKey());
 				}
 			}
 			return c;
@@ -123,8 +123,8 @@ public class ItemCounter<K extends Object> {
 			if(c == 0) {
 				if(a.getKey() instanceof Comparable<?>) {
 					@SuppressWarnings("unchecked")
-					Comparable<K> x = (Comparable<K>)b.getKey(); 
-					return x.compareTo(a.getKey());	
+					Comparable<K> x = (Comparable<K>)b.getKey();
+					return x.compareTo(a.getKey());
 				}
 			}
 			return c;
@@ -137,6 +137,25 @@ public class ItemCounter<K extends Object> {
 	 */
 	public ItemCounter() {
 		count = new HashMap<K, Integer>();
+	}
+
+
+	/**
+	 * Constructor.
+	 * Allows use of an already-built map from keys to their count values.
+	 * Note that this map is used as is, without validating the map (it is possible it has zero or negative count values).
+	 *
+	 * @param count an already-built map from keys to their count values
+	 * @param isCopyingCount if false, directly references the given count map; if true, will create a copy of the given count map.
+	 *   Note that copying the count map is the safest usage, because it forces the modification of the count map to only occur via
+	 *   methods on this object.  The downside is that (at least) twice the memory is required to make the copy.
+	 */
+	protected ItemCounter(Map<K, Integer> count, boolean isCopyingCount) {
+		if(isCopyingCount) {
+			this.count = new HashMap<K, Integer>(count);
+		} else {
+			this.count = count;
+		}
 	}
 
 
@@ -205,13 +224,13 @@ public class ItemCounter<K extends Object> {
 		}
 		return sum;
 	}
-	
-	
+
+
 	/**
 	 * Returns the key/value pair with the lowest value (and secondarily with the "lowest" key).
 	 * Not stable; if there are multiple "different" items that compare as equal (for example, if the keys don't implement {@link Comparable}),
 	 * then it is possible for multiple calls to this method to return multiple answers.
-	 * @return key/value pair with the lowest value, or <null,0> if the counter is empty 
+	 * @return key/value pair with the lowest value, or <null,0> if the counter is empty
 	 */
 	public KeyValuePair min() {
 		if(count.isEmpty()) {
@@ -220,33 +239,7 @@ public class ItemCounter<K extends Object> {
 		KeyValuePair pair = null;
 		ValueKeyAscendingComparator vc = new ValueKeyAscendingComparator();
 		for(Entry<K, Integer> entry : count.entrySet()) {
-			KeyValuePair entryPair = new KeyValuePair(entry); 
-			if(pair == null) {
-				pair = entryPair;
-			} else {
-				if(vc.compare(pair, entryPair) > 0) {
-					pair = entryPair;
-				}
-			}
-		}
-		return pair;
-	}
-	
-	
-	/**
-	 * Returns the key/value pair with the largest value (and secondarily with the "largest" key).
-	 * Not stable; if there are multiple "different" items that compare as equal (for example, if the keys don't implement {@link Comparable}),
-	 * then it is possible for multiple calls to this method to return multiple answers.
-	 * @return key/value pair with the lowest value, or <null,0> if the counter is empty 
-	 */
-	public KeyValuePair max() {
-		if(count.isEmpty()) {
-			return new KeyValuePair(null,0);
-		}
-		KeyValuePair pair = null;
-		ValueKeyDescendingComparator vc = new ValueKeyDescendingComparator();
-		for(Entry<K, Integer> entry : count.entrySet()) {
-			KeyValuePair entryPair = new KeyValuePair(entry); 
+			KeyValuePair entryPair = new KeyValuePair(entry);
 			if(pair == null) {
 				pair = entryPair;
 			} else {
@@ -258,7 +251,33 @@ public class ItemCounter<K extends Object> {
 		return pair;
 	}
 
-	
+
+	/**
+	 * Returns the key/value pair with the largest value (and secondarily with the "largest" key).
+	 * Not stable; if there are multiple "different" items that compare as equal (for example, if the keys don't implement {@link Comparable}),
+	 * then it is possible for multiple calls to this method to return multiple answers.
+	 * @return key/value pair with the lowest value, or <null,0> if the counter is empty
+	 */
+	public KeyValuePair max() {
+		if(count.isEmpty()) {
+			return new KeyValuePair(null,0);
+		}
+		KeyValuePair pair = null;
+		ValueKeyDescendingComparator vc = new ValueKeyDescendingComparator();
+		for(Entry<K, Integer> entry : count.entrySet()) {
+			KeyValuePair entryPair = new KeyValuePair(entry);
+			if(pair == null) {
+				pair = entryPair;
+			} else {
+				if(vc.compare(pair, entryPair) > 0) {
+					pair = entryPair;
+				}
+			}
+		}
+		return pair;
+	}
+
+
 	/**
 	 * Get the mean of all item counts in this collection.
 	 * @return the mean of all item counts, or zero if empty.
@@ -270,19 +289,19 @@ public class ItemCounter<K extends Object> {
 		return sum()/(double)count.size();
 
 		/*
-		 * The code below calculates an incremental average, which can prevent overflow in the accumulating variable. 
-		 * 
+		 * The code below calculates an incremental average, which can prevent overflow in the accumulating variable.
+		 *
 		 * In LaTeX:
 		 * A_{i+1} = A_i + \frac{ x_{i+1} - A_i }{ i+1 }
 		 */
-		
+
 //		double mean = 0;
 //		int i = 1;
-//		
+//
 //		for(Integer c : count.values()) {
 //			mean += (c - mean)/i++;
 //		}
-//		
+//
 //		return mean;
 	}
 
@@ -291,22 +310,22 @@ public class ItemCounter<K extends Object> {
 	 * Get the sample variance of all item counts in this collection.
 	 * Use this variance if you desire an estimate of the variance of some population of items, of which the current ItemCounter contains only an incomplete sample.
 	 * Otherwise, see {@link #variancePopulation()}.
-	 * 
+	 *
 	 * @return the sample variance of all item counts, or zero if empty.
 	 */
 	public double variance() {
 		if(count.size() < 2) {
 			return 0;
 		}
-		
+
 		double mean = mean();
 		double var = 0.0;
-		
+
 		for(Integer n : count.values()) {
 			double foo = mean - n;
 			var += foo * foo;
 		}
-	
+
 		return var / (count.size() - 1);
 	}
 
@@ -314,12 +333,12 @@ public class ItemCounter<K extends Object> {
 	/**
 	 * Get the population variance of all item counts in this collection.
 	 * Use this variance if you desire to know only the variance of the items in this ItemCounter, otherwise see {@link #variance()}.
-	 * 
+	 *
 	 * <p>There is little difference between the sample and population variance when there are many distinct items.
 	 * When there are few items, the difference is pronounced.
 	 * In general, it is probably better to use the sample variance {@link #variance()}.
 	 * </p>
-	 *  
+	 *
 	 * @return the population variance of all item counts, or zero if empty.
 	 */
 	public double variancePopulation() {
@@ -329,7 +348,7 @@ public class ItemCounter<K extends Object> {
 
 		double mean = mean();
 		double var = 0.0;
-		
+
 		for(Integer n : count.values()) {
 			double foo = mean - n;
 			var += foo * foo;
@@ -338,11 +357,11 @@ public class ItemCounter<K extends Object> {
 		return var / count.size();
 	}
 
-	
+
 	/**
 	 * Returns a list of key-value pairs that is sorted first by item counts, then by item comparisons if those objects implement {@link Comparable}.
 	 * The returned list is not backed by the item counter, so consider it a snapshot of the item counts.
-	 * 
+	 *
 	 * <p>This sort is not stable; if there are multiple "different" items that compare as equal (for example, if the keys don't implement {@link Comparable}),
 	 * then it is possible for multiple calls to this method to return various orderings.
 	 * </p>
@@ -467,23 +486,19 @@ public class ItemCounter<K extends Object> {
 	 * @return an unmodifiable version of this object
 	 */
 	public ItemCounter<K> asUnmodifiable() {
-		return new UnmodifiableItemCounter(this);
+		return new UnmodifiableItemCounter(this, false);
 	}
-	
-	
+
+
 	/**
 	 * Wraps the item counter and prevents modification, although the backing item counter can still be modified.
 	 * @author romanows
 	 */
 	protected class UnmodifiableItemCounter extends ItemCounter<K> {
-		private final ItemCounter<K> itemCounter;
-		
-		public UnmodifiableItemCounter(ItemCounter<K> itemCounter) {
-			this.itemCounter = itemCounter;
+
+		public UnmodifiableItemCounter(ItemCounter<K> itemCounter, boolean isCopyingCount) {
+			super(itemCounter.count, isCopyingCount);
 		}
-		
-		@Override
-		public Integer get(K item) {return itemCounter.get(item);}
 
 		@Override
 		public void set(K item, int count) {
@@ -494,47 +509,5 @@ public class ItemCounter<K extends Object> {
 		public int increment(K item) {
 			throw new UnsupportedOperationException();
 		}
-
-		@Override
-		public long sum() {return itemCounter.sum();}
-
-		@Override
-		public double mean() {return itemCounter.mean();}
-
-		@Override
-		public double variance() {return itemCounter.variance();}
-
-		@Override
-		public double variancePopulation() {return itemCounter.variancePopulation();}
-
-		@Override
-		public List<KeyValuePair> sortByValueKey(boolean isAscending) {return itemCounter.sortByValueKey(isAscending);}
-
-		@Override
-		public ItemCounter<Integer> countOfCounts() {return itemCounter.countOfCounts();}
-
-		@Override
-		public int size() {return itemCounter.size();}
-
-		@Override
-		public Set<K> getItems() {return itemCounter.getItems();}
-
-		@Override
-		public Map<K, Integer> getMap() {return itemCounter.getMap();}
-
-		@Override
-		public String toCSV() {return itemCounter.toCSV();}
-
-		@Override
-		public String toCSV(String columnDelimiter, String rowDelimiter) {return itemCounter.toCSV(columnDelimiter, rowDelimiter);}
-		
-		@Override
-		public void writeCSV(Writer writer) throws IOException {itemCounter.writeCSV(writer);}
-		
-		@Override
-		public void writeCSV(Writer writer, String columnDelimiter, String rowDelimiter) throws IOException {itemCounter.writeCSV(writer, columnDelimiter, rowDelimiter);}
-		
-		@Override
-		public ItemCounter<K> asUnmodifiable() {return itemCounter.asUnmodifiable();}
 	}
 }
